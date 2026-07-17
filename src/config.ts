@@ -28,10 +28,10 @@ function list(name: string): string[] {
 }
 
 export const config = {
-  port: int("PORT", 4000),
+  port: int("PORT", 4010),
   nodeEnv: str("NODE_ENV", "development"),
   isProd: str("NODE_ENV", "development") === "production",
-  publicBaseUrl: str("PUBLIC_BASE_URL", "http://localhost:4000"),
+  publicBaseUrl: str("PUBLIC_BASE_URL", "http://localhost:4010"),
 
   // Auth
   devLogin: bool("DEV_LOGIN", false),

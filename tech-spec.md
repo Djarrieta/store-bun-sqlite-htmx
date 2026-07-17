@@ -1093,7 +1093,7 @@ Son **solo referencia de diseño** (no se sirven al público); viven en `docs/mo
 ### Topología
 
 - La app corre como **un proceso Bun** escuchando en `127.0.0.1:${PORT}` (p. ej.
-  4000). **No** expone el puerto a Internet directamente.
+  4010). **No** expone el puerto a Internet directamente.
 - **`cloudflared`** abre un túnel saliente y mapea `https://tu-dominio` →
   `http://localhost:${PORT}`. Cloudflare aporta **TLS, DDoS/WAF, caché y
   rate-limit**.
@@ -1106,7 +1106,7 @@ tunnel: <TUNNEL_ID>
 credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
 ingress:
   - hostname: tu-dominio.com
-    service: http://localhost:4000
+    service: http://localhost:4010
   - service: http_status:404
 ```
 
@@ -1174,7 +1174,7 @@ Endurecimiento sugerido: validar que `.env` existe antes de arrancar y **respald
 
 ```env
 # --- App ---
-PORT=4000
+PORT=4010
 NODE_ENV=production
 PUBLIC_BASE_URL=https://tu-dominio.com     # para redirect URIs y webhooks
 

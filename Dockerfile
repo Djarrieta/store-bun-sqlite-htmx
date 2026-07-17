@@ -14,6 +14,6 @@ COPY . .
 VOLUME ["/app/data"]
 
 ENV NODE_ENV=production
-EXPOSE 4000
+EXPOSE 4010
 
 CMD ["bun", "src/index.ts"]
