@@ -53,4 +53,40 @@ declare module "bun:sqlite" {
   }
 }
 
+// Minimal Node.js globals/modules used by the app (no `@types/node` installed).
+interface Buffer extends Uint8Array {}
+declare const Buffer: {
+  from(input: string | Uint8Array | ArrayBuffer, encoding?: string): Buffer;
+};
+
+declare module "node:fs" {
+  export function mkdirSync(
+    path: string,
+    options?: { recursive?: boolean }
+  ): void;
+  export function rmSync(
+    path: string,
+    options?: { force?: boolean; recursive?: boolean }
+  ): void;
+}
+
+declare module "node:fs/promises" {
+  export function mkdir(
+    path: string,
+    options?: { recursive?: boolean }
+  ): Promise<string | undefined>;
+}
+
+declare module "node:crypto" {
+  export function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean;
+  export function createHmac(
+    algorithm: string,
+    key: string | Uint8Array
+  ): {
+    update(data: string | Uint8Array): {
+      digest(encoding: "hex" | "base64"): string;
+    };
+  };
+}
+
 export {};
