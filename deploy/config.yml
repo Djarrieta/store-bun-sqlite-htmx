@@ -1,0 +1,7 @@
+tunnel: 516b4a12-06c0-4ea4-abfb-c0e2fd0cf4c5
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: crista.click
+    service: http://web:4010
+  - service: http_status:404

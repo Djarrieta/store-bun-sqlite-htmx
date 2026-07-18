@@ -9,12 +9,12 @@ services:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads
 
-  # Optional: publish via Cloudflare Tunnel (token from Zero Trust dashboard).
-  # cloudflared:
-  #   image: cloudflare/cloudflared:latest
-  #   restart: unless-stopped
-  #   command: tunnel run
-  #   environment:
-  #     - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-  #   depends_on:
-  #     - web
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: crista-click-tunnel
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./deploy:/etc/cloudflared:ro
+    restart: unless-stopped
+    depends_on:
+      - web
