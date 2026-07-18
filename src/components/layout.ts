@@ -6,6 +6,7 @@ import { themeCss } from "../theme.ts";
 import { escapeHtml } from "../core/http.ts";
 import type { User } from "../auth/auth.db.ts";
 import { renderNav } from "./nav.ts";
+import { leafDivider } from "./ornament.ts";
 import { collectedCss } from "./registry.ts";
 
 export interface PageOptions {
@@ -30,8 +31,15 @@ export function page(opts: PageOptions): string {
   <link rel="icon" href="/brand/logo-htal.png">
   <style>${themeCss}${collectedCss()}
     .site-main { min-height: 60vh; padding-bottom: 4rem; }
-    .site-footer { border-top: 1px solid var(--border); margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; }
-    .site-footer .container { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .site-footer { border-top: 1px solid var(--border); margin-top: 4rem; padding: 3.25rem 0 2.5rem; background: var(--card); color: var(--muted); }
+    .site-footer__inner { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.55rem; }
+    .site-footer__brand { font-family: var(--font-serif); font-size: 1.85rem; font-weight: 600; letter-spacing: 0.34em; text-indent: 0.34em; color: var(--accent); line-height: 1; }
+    .site-footer__tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--muted); }
+    .site-footer__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.4rem; margin-top: 0.5rem; }
+    .site-footer__links a { color: var(--fg); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 500; }
+    .site-footer__links a:hover { color: var(--accent); }
+    .site-footer__legal { font-size: 0.76rem; margin: 0.6rem 0 0; }
+    .site-footer .ornament { margin: 0.35rem 0; }
   </style>
   ${opts.head ?? ""}
   <script src="/vendor/htmx.min.js" defer></script>
@@ -44,9 +52,17 @@ export function page(opts: PageOptions): string {
     </div>
   </main>
   <footer class="site-footer">
-    <div class="container">
-      <span>© ${new Date().getFullYear()} CRISTA · Prendas de origen natural</span>
-      <span><a href="/pagos-envios">Pagos y envíos</a> · <a href="/nosotros">Nosotros</a></span>
+    <div class="container site-footer__inner">
+      <div class="site-footer__brand">CRISTA</div>
+      <div class="site-footer__tag">Naturalmente tú</div>
+      ${leafDivider({ className: "ornament--muted" })}
+      <nav class="site-footer__links">
+        <a href="/productos">Productos</a>
+        <a href="/nosotros">Nosotros</a>
+        <a href="/pagos-envios">Pagos y envíos</a>
+        <a href="/chat">Asistente</a>
+      </nav>
+      <p class="site-footer__legal">© ${new Date().getFullYear()} CRISTA · Prendas de origen natural</p>
     </div>
   </footer>
 </body>

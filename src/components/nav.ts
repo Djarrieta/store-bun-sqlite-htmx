@@ -16,7 +16,10 @@ export interface NavOptions {
 /** The cart link + count badge. Also returned standalone by HTMX cart updates. */
 export function cartLink(cartCount = 0): string {
   return `<a id="cart-badge" class="nav__cart" href="/carrito" aria-label="Carrito">
-      <span class="nav__cart-icon">&#128722;</span>
+      <svg class="nav__cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6.5 8.5 H17.5 L16.7 19.5 H7.3 Z"/>
+        <path d="M9.2 8.5 V6.7 a2.8 2.8 0 0 1 5.6 0 V8.5"/>
+      </svg>
       ${cartCount > 0 ? `<span class="nav__cart-badge">${cartCount}</span>` : ""}
     </a>`;
 }
@@ -76,8 +79,9 @@ export const navCss = /* css */ `
   font-weight: 600;
 }
 .nav__link:hover, .nav__link.is-active { color: var(--accent); }
-.nav__cart { position: relative; display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-btn-icon); padding: 0.4rem 0.6rem; }
-.nav__cart-icon { font-size: 1.1rem; filter: grayscale(1); }
+.nav__cart { position: relative; display: inline-flex; color: var(--fg); border: 1px solid var(--border-strong); border-radius: var(--radius-btn-icon); padding: 0.4rem 0.55rem; transition: border-color 0.15s ease, color 0.15s ease; }
+.nav__cart:hover { color: var(--accent); border-color: var(--accent); }
+.nav__cart-icon { display: block; }
 .nav__cart-badge {
   position: absolute; top: -8px; right: -8px;
   background: var(--accent); color: var(--accent-foreground);

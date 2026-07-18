@@ -5,6 +5,22 @@
  */
 
 export const themeCss = /* css */ `
+/* Tipografías de marca CRISTA — self-hosted (font-src 'self'). Variables. */
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("/fonts/PlayfairDisplay.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/Montserrat.woff2") format("woff2");
+}
+
 :root {
   /* Paleta base */
   --bg: #f8f5f0;
@@ -46,8 +62,8 @@ export const themeCss = /* css */ `
   --shadow-card:    var(--shadow-soft);
 
   /* Tipografía */
-  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* Espaciado / layout */
   --container: 1120px;
@@ -71,9 +87,9 @@ body {
 h1, h2, h3, h4 {
   font-family: var(--font-serif);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.14;
   margin: 0 0 0.5em;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.005em;
 }
 h1 { font-size: clamp(2rem, 4vw, 3rem); }
 h2 { font-size: clamp(1.5rem, 3vw, 2rem); }

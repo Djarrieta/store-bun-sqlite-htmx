@@ -7,22 +7,59 @@ import { registerCss } from "../components/registry.ts";
 import { productsRepo } from "../modules/products/products.db.ts";
 import { variantsRepo, type Variant } from "../modules/variants/variants.db.ts";
 import { productCard } from "../components/storefront/product-card.ts";
+import { leafDivider, leafBranch, leafMark } from "../components/ornament.ts";
 import { cartCount } from "./cart.service.ts";
 import { escapeHtml } from "../core/http.ts";
 import { contentRepo } from "../modules/content/content.db.ts";
 
 registerCss(/* css */ `
 .hero {
-  position: relative; border-radius: var(--radius-card); overflow: hidden;
-  background: linear-gradient(120deg, #2c2320, #4a3b34);
-  color: #fff; padding: clamp(2rem, 6vw, 4.5rem); margin-bottom: 2.5rem;
-  min-height: 340px; display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 1.12fr 0.88fr;
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+  background: var(--surface); box-shadow: var(--shadow-soft);
+  margin-bottom: 3.5rem;
 }
-.hero__eyebrow { color: rgba(255,255,255,0.7); letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
-.hero h1 { color: #fff; font-size: clamp(2.5rem, 6vw, 4rem); margin: 0.5rem 0; }
-.hero p { color: rgba(255,255,255,0.85); max-width: 46ch; }
-.hero .btn { margin-top: 1rem; align-self: flex-start; }
-.section-head { margin: 2rem 0 1rem; }
+.hero__body {
+  padding: clamp(2rem, 5vw, 4rem);
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+}
+.hero__eyebrow { color: var(--accent); letter-spacing: 0.28em; text-transform: uppercase; font-size: 0.72rem; font-weight: 600; }
+.hero h1 { font-size: clamp(2.5rem, 5.4vw, 3.8rem); margin: 0.7rem 0 0; color: var(--fg); text-wrap: balance; }
+.hero .ornament { justify-content: flex-start; margin: 1.1rem 0 0; }
+.hero__lead { color: var(--muted); max-width: 42ch; margin: 1.2rem 0 1.8rem; font-size: 1.02rem; }
+.hero__cta { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.hero__link { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.78rem; font-weight: 600; }
+.hero__aside {
+  position: relative; overflow: hidden; min-height: 360px;
+  background: linear-gradient(155deg, var(--card), #e7dccd);
+  display: grid; place-items: center; border-left: 1px solid var(--border);
+}
+.hero__monogram {
+  position: absolute; left: 50%; top: 50%; transform: translate(-56%, -50%);
+  font-family: var(--font-serif); font-weight: 500; line-height: 1;
+  font-size: clamp(12rem, 24vw, 19rem); color: var(--accent); opacity: 0.13;
+}
+.hero__aside .leaf-branch { position: relative; z-index: 1; height: min(82%, 300px); width: auto; opacity: 0.92; }
+
+.values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 0 0 3.75rem; }
+.values__item { text-align: center; padding: 0 1rem; }
+.values__item h3 { font-size: 1.15rem; margin: 0.55rem 0 0.35rem; }
+.values__item p { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+.section-head--center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; margin: 0 0 2rem; }
+.section-head--center .eyebrow { color: var(--accent); }
+.section-head--center h2 { margin: 0.15rem 0; }
+.section-more { display: flex; justify-content: center; margin-top: 2.75rem; }
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .hero__body { min-width: 0; padding: clamp(1.75rem, 6vw, 2.5rem); }
+  .hero h1 { font-size: clamp(1.9rem, 8.5vw, 2.8rem); overflow-wrap: break-word; }
+  .hero__aside { min-height: 220px; border-left: none; border-top: 1px solid var(--border); }
+  .hero__monogram { font-size: 12rem; }
+  .values { grid-template-columns: 1fr; gap: 1.75rem; }
+}
 `);
 
 function homePage(user: User | null, cartCountValue: number): string {
@@ -34,20 +71,49 @@ function homePage(user: User | null, cartCountValue: number): string {
     variantsByProduct.set(v.product_id, list);
   }
   const grid = featured.length
-    ? `<div class="catalog-grid">${featured.map((p) => productCard(p, variantsByProduct.get(p.id) ?? [])).join("")}</div>`
+    ? `<div class="catalog-grid">${featured.map((p) => productCard(p, variantsByProduct.get(p.id) ?? [])).join("")}</div>
+       <div class="section-more"><a class="btn btn--outline" href="/productos">Ver toda la colección</a></div>`
     : `<div class="panel"><p class="muted" style="margin:0">Pronto verás aquí nuestra colección.</p></div>`;
+
+  const values = [
+    { title: "Algodones nobles", text: "Fibras naturales, escogidas para respirar contigo." },
+    { title: "Vestir con calma", text: "Siluetas atemporales, pensadas sin prisa." },
+    { title: "Hecho para ti", text: "Prendas que realzan tu esencia, no la disfrazan." },
+  ]
+    .map(
+      (v) => `<div class="values__item">
+        ${leafMark()}
+        <h3>${v.title}</h3>
+        <p>${v.text}</p>
+      </div>`,
+    )
+    .join("");
 
   const body = `
     <section class="hero">
-      <span class="hero__eyebrow">Colección CRISTA</span>
-      <h1>Naturalmente tú</h1>
-      <p>Prendas de origen natural, pensadas para realzar tu esencia. Algodones nobles,
-      siluetas atemporales y detalles botánicos hechos para acompañarte cada día.</p>
-      <a class="btn" href="/productos">Ver colección</a>
+      <div class="hero__body">
+        <span class="hero__eyebrow">Colección CRISTA</span>
+        <h1>Naturalmente tú</h1>
+        ${leafDivider()}
+        <p class="hero__lead">Prendas de origen natural, pensadas para realzar tu esencia:
+        algodones nobles, siluetas atemporales y detalles botánicos para acompañarte cada día.</p>
+        <div class="hero__cta">
+          <a class="btn" href="/productos">Ver colección</a>
+          <a class="hero__link" href="/nosotros">Nuestra historia →</a>
+        </div>
+      </div>
+      <div class="hero__aside">
+        <span class="hero__monogram">C</span>
+        ${leafBranch()}
+      </div>
     </section>
-    <div class="row-between section-head">
-      <h2 style="margin:0">Productos</h2>
-      <a class="muted" href="/productos">Ver todo →</a>
+
+    <section class="values">${values}</section>
+
+    <div class="section-head--center">
+      <span class="eyebrow">La colección</span>
+      <h2>Piezas para florecer</h2>
+      ${leafDivider()}
     </div>
     ${grid}`;
   return page({ title: "Inicio", user, active: "home", cartCount: cartCountValue, body });

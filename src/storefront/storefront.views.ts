@@ -3,6 +3,7 @@ import { page } from "../components/layout.ts";
 import { escapeHtml, escapeAttr } from "../core/http.ts";
 import { formatCop } from "../core/format.ts";
 import { productCard } from "../components/storefront/product-card.ts";
+import { leafDivider } from "../components/ornament.ts";
 import { registerCss } from "../components/registry.ts";
 import type { User } from "../auth/auth.db.ts";
 import type { Page } from "../core/repository.ts";
@@ -11,16 +12,22 @@ import { parseAttributes, type Variant } from "../modules/variants/variants.db.t
 import type { Category } from "../modules/categories/categories.db.ts";
 
 registerCss(/* css */ `
-.filters { margin-bottom: 1.5rem; }
+.page-head { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; margin: 0.5rem 0 2rem; }
+.page-head .eyebrow { color: var(--accent); }
+.page-head h1 { margin: 0.1rem 0; }
+.filters { margin: 0 auto 2.25rem; max-width: 640px; }
 .filters__row { display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; }
-.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.75rem 1.5rem; }
 .pdetail { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
-.pdetail__media { background: var(--card); border-radius: var(--radius-card); overflow: hidden; aspect-ratio: 1; display: grid; place-items: center; }
+.pdetail__media { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; aspect-ratio: 4 / 5; display: grid; place-items: center; }
 .pdetail__media img { width: 100%; height: 100%; object-fit: cover; }
+.pdetail__media .ph { color: var(--muted); font-family: var(--font-serif); letter-spacing: 0.24em; font-size: 2rem; }
 .pdetail__thumbs { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
 .pdetail__thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
-.pdetail__price { font-size: 1.6rem; font-weight: 700; }
+.pdetail .ornament { justify-content: flex-start; margin: 1rem 0; }
+.pdetail__price { font-family: var(--font-serif); font-size: 1.9rem; color: var(--accent); }
 .pdetail__price s { color: var(--muted); font-weight: 400; font-size: 1rem; margin-right: 0.5rem; }
+.pdetail__back { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; font-weight: 600; }
 @media (max-width: 760px) { .pdetail { grid-template-columns: 1fr; } .filters__row { grid-template-columns: 1fr; } }
 `);
 
@@ -56,10 +63,15 @@ export function catalogGrid(data: CatalogData): string {
 export function catalogPage(opts: { user: User | null; cartCount: number; data: CatalogData }): string {
   const { data } = opts;
   const title = data.activeCategory ? data.activeCategory.name : "Productos";
+  const eyebrow = data.activeCategory ? "Categoría" : "Tienda";
   const searchUrl = data.activeCategory ? `/categorias/${data.activeCategory.slug}` : "/productos";
   const body = `
-    <div class="row-between" style="margin-bottom:0.5rem"><h1 style="margin:0">${escapeHtml(title)}</h1></div>
-    <div class="panel filters">
+    <div class="page-head">
+      <span class="eyebrow">${eyebrow}</span>
+      <h1>${escapeHtml(title)}</h1>
+      ${leafDivider()}
+    </div>
+    <div class="filters">
       <div class="filters__row">
         <input class="input" type="search" name="q" value="${escapeAttr(data.q)}" placeholder="Buscar productos…"
           hx-get="${searchUrl}" hx-target="#catalog-grid" hx-swap="innerHTML"
@@ -92,7 +104,7 @@ export function productDetailPage(opts: {
 
   const mainImg = images[0]
     ? `<img src="${escapeAttr(images[0].url)}" alt="${escapeAttr(images[0].alt ?? product.title)}">`
-    : `<span class="muted" style="font-family:var(--font-serif);font-size:2rem">CRISTA</span>`;
+    : `<span class="ph">CRISTA</span>`;
 
   const inStock = variants.filter((v) => v.stock > 0);
   const buyBox = inStock.length
@@ -120,7 +132,7 @@ export function productDetailPage(opts: {
     : `<p class="badge badge--warn" style="margin-top:1.5rem">Agotado</p>`;
 
   const body = `
-    <p class="muted" style="margin-bottom:1rem"><a href="/productos">← Volver al catálogo</a></p>
+    <p style="margin-bottom:1.25rem"><a class="pdetail__back muted" href="/productos">← Volver al catálogo</a></p>
     <div class="pdetail">
       <div>
         <div class="pdetail__media">${mainImg}</div>
@@ -130,7 +142,8 @@ export function productDetailPage(opts: {
         ${opts.category ? `<span class="eyebrow">${escapeHtml(opts.category.name)}</span>` : ""}
         <h1>${escapeHtml(product.title)}</h1>
         ${priceHtml}
-        ${product.description ? `<p style="margin-top:1rem">${escapeHtml(product.description)}</p>` : ""}
+        ${leafDivider()}
+        ${product.description ? `<p>${escapeHtml(product.description)}</p>` : ""}
         ${tags.length ? `<p class="muted">${tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join(" ")}</p>` : ""}
         ${buyBox}
       </div>
