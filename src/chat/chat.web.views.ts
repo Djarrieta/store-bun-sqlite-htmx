@@ -14,8 +14,8 @@ registerCss(/* css */ `
 .bubble--assistant { background: var(--card); color: var(--fg); align-self: flex-start; border-bottom-left-radius: 0.2rem; }
 .bubble--user { background: var(--accent); color: var(--accent-foreground); align-self: flex-end; border-bottom-right-radius: 0.2rem; }
 .bubble img { border-radius: 0.5rem; margin-top: 0.4rem; max-width: 200px; }
-.chat-composer { display: flex; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.85rem; margin-top: 0.5rem; align-items: center; }
-.chat-composer .input { flex: 1; }
+.chat-composer { display: flex; flex-wrap: wrap; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.85rem; margin-top: 0.5rem; align-items: center; }
+.chat-composer .input { flex: 1 1 60%; min-width: 0; }
 .chat-attach { position: relative; overflow: hidden; }
 .chat-attach input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 `);

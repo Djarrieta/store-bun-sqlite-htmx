@@ -91,7 +91,8 @@ export const navCss = /* css */ `
 }
 .nav__avatar img { width: 36px; height: 36px; object-fit: cover; }
 @media (max-width: 640px) {
-  .nav__links { gap: 0.85rem; }
+  .nav__inner { flex-wrap: wrap; row-gap: 0.5rem; }
+  .nav__links { gap: 0.6rem 0.85rem; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
   .nav__link { font-size: 0.68rem; letter-spacing: 0.06em; }
 }
 `;
