@@ -121,7 +121,7 @@ export function orderDetailPage(opts: {
     <p class="muted">${escapeHtml(formatDateTime(order.created_at))}</p>
     ${opts.error ? `<div class="alert alert--error">${escapeHtml(opts.error)}</div>` : ""}
     ${paymentPanel}
-    <div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;gap:2rem">
+    <div class="order-cols">
       <div class="panel">
         <h2>Artículos</h2>
         ${itemRows}

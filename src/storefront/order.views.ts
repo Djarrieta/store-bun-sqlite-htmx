@@ -11,6 +11,8 @@ import type { Order, OrderItem, OrderStatus } from "../modules/orders/orders.db.
 registerCss(/* css */ `
 .order-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .order-ref { font-family: var(--font-serif); }
+.order-cols { display: grid; grid-template-columns: 1.3fr 1fr; align-items: start; gap: 2rem; margin-top: 1.5rem; }
+@media (max-width: 760px) { .order-cols { grid-template-columns: 1fr; } }
 `);
 
 const STATUS_LABELS: Record<OrderStatus, { label: string; variant: "default" | "ok" | "warn" | "danger" | "accent" }> = {
@@ -91,7 +93,7 @@ export function orderPage(opts: {
 
     ${opts.paymentSection ?? ""}
 
-    <div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;gap:2rem;margin-top:1.5rem">
+    <div class="order-cols">
       <div class="panel">
         <h2>Artículos</h2>
         ${itemRows}
