@@ -1,8 +1,12 @@
 services:
   web:
+    container_name: store-bun-sqlite-htmx-web
     build: .
     restart: unless-stopped
     env_file: .env
+    environment:
+      NODE_ENV: production
+      DEV_LOGIN: "0"
     ports:
       - "127.0.0.1:4010:4010"
     volumes:

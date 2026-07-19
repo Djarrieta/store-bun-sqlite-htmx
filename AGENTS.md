@@ -22,6 +22,19 @@ bun run typecheck  # tsc --noEmit — run this to validate changes
 - No `npm`/`node` — this is a Bun project with zero runtime dependencies (only `@types/bun` + `typescript` dev deps).
 - Deploy: `start.sh` (git pull + `docker compose up -d --build` + migrations at boot). See [tech-spec.md](tech-spec.md) §17.
 
+## Environments
+
+Two environments coexist in this repo:
+
+| Environment | Path | Branch | Port | DB / uploads | Process |
+|---|---|---|---|---|---|
+| Production | `/home/dario/projects/store-bun-sqlite-htmx` | `main` | `4010` (Docker → tunnel) | `./data`, `./public/uploads` | `docker compose up -d` via `start.sh` |
+| Development | `/home/dario/projects/store-bun-sqlite-htmx-dev` | `dev` | `4011` (LAN/Tailscale) | Own `./data`, `./public/uploads` (gitignored worktree dirs) | systemd user unit `store-dev` (`bun --watch src/index.ts`) |
+
+- Prod runs with `NODE_ENV=production` and `DEV_LOGIN=0`. Dev runs with `NODE_ENV=development` and `DEV_LOGIN=1`.
+- The prod `web` service sets `environment: { NODE_ENV: production, DEV_LOGIN: "0" }` in `docker-compose.yml` so `env_file` can never accidentally enable dev mode.
+- To restart/see dev logs: `systemctl --user restart store-dev` / `journalctl --user -u store-dev -f`.
+
 ## Critical conventions
 
 - **Explicit `.ts` in imports**: always `import { db } from "../db.ts"` (tsconfig has `allowImportingTsExtensions` + `verbatimModuleSyntax`). Use `import type` for type-only imports.
