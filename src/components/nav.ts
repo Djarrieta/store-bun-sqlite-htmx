@@ -13,13 +13,21 @@ export interface NavOptions {
   cartCount?: number;
 }
 
+const userIcon = /* svg */ `<svg class="nav__icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+  <circle cx="12" cy="7" r="4"/>
+</svg>`;
+
+const cartIcon = /* svg */ `<svg class="nav__cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <circle cx="8" cy="21" r="1"/>
+  <circle cx="19" cy="21" r="1"/>
+  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+</svg>`;
+
 /** The cart link + count badge. Also returned standalone by HTMX cart updates. */
 export function cartLink(cartCount = 0): string {
-  return `<a id="cart-badge" class="nav__cart" href="/carrito" aria-label="Carrito">
-      <svg class="nav__cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6.5 8.5 H17.5 L16.7 19.5 H7.3 Z"/>
-        <path d="M9.2 8.5 V6.7 a2.8 2.8 0 0 1 5.6 0 V8.5"/>
-      </svg>
+  return `<a id="cart-badge" class="nav__icon-btn nav__cart" href="/carrito" aria-label="Carrito">
+      ${cartIcon}
       ${cartCount > 0 ? `<span class="nav__cart-badge">${cartCount}</span>` : ""}
     </a>`;
 }
@@ -37,7 +45,9 @@ export function renderNav(opts: NavOptions): string {
              : `<span>${escapeHtml((user.display_name || user.email).charAt(0).toUpperCase())}</span>`
          }
        </a>`
-    : `<a class="nav__link" href="/login">Entrar</a>`;
+    : `<a class="nav__icon-btn nav__login" href="/login" aria-label="Entrar" title="Entrar">
+         ${userIcon}
+       </a>`;
 
   return `
   <header class="nav">
@@ -79,9 +89,17 @@ export const navCss = /* css */ `
   font-weight: 600;
 }
 .nav__link:hover, .nav__link.is-active { color: var(--accent); }
-.nav__cart { position: relative; display: inline-flex; color: var(--fg); border: 1px solid var(--border-strong); border-radius: var(--radius-btn-icon); padding: 0.4rem 0.55rem; transition: border-color 0.15s ease, color 0.15s ease; }
-.nav__cart:hover { color: var(--accent); border-color: var(--accent); }
-.nav__cart-icon { display: block; }
+.nav__icon-btn {
+  display: inline-flex;
+  color: var(--fg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-btn-icon);
+  padding: 0.4rem 0.55rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.nav__icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.nav__icon-btn svg, .nav__cart-icon { display: block; }
+.nav__cart { position: relative; }
 .nav__cart-badge {
   position: absolute; top: -8px; right: -8px;
   background: var(--accent); color: var(--accent-foreground);
