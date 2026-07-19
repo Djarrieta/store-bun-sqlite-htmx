@@ -4,7 +4,7 @@ import { html, redirect, notFound } from "../../core/http.ts";
 import { adminShell } from "../../views.ts";
 import { escapeHtml } from "../../core/http.ts";
 import { requirePermission } from "../../auth/index.ts";
-import { textareaField, submitButton } from "../../components/forms.ts";
+import { textareaField, textField, submitButton } from "../../components/forms.ts";
 import { contentRepo } from "./content.db.ts";
 import { CONTENT_KEY, CONTENT_FIELDS } from "./content.rules.ts";
 import type { User } from "../../auth/auth.db.ts";
@@ -14,11 +14,15 @@ const BASE = "/admin/contenido";
 function contentPage(user: User, saved?: string): string {
   const forms = CONTENT_FIELDS.map((f) => {
     const value = contentRepo.getValue(f.key, f.default);
+    const field =
+      f.type === "image_url"
+        ? textField({ name: "value", label: "URL de imagen", value, help: f.help })
+        : textareaField({ name: "value", label: "Texto", value });
     return `<div class="panel" style="margin-bottom:1.5rem">
       <form method="post" action="${BASE}/${encodeURIComponent(f.key)}" class="stack">
         <h2 style="margin:0 0 0.5rem">${escapeHtml(f.label)}</h2>
         ${saved === f.key ? `<div class="alert alert--ok">Guardado.</div>` : ""}
-        ${textareaField({ name: "value", label: "Texto", value })}
+        ${field}
         ${submitButton("Guardar")}
       </form>
     </div>`;

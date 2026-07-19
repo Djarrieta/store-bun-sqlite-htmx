@@ -9,7 +9,7 @@ import { variantsRepo, type Variant } from "../modules/variants/variants.db.ts";
 import { productCard } from "../components/storefront/product-card.ts";
 import { leafDivider, leafBranch, leafMark } from "../components/ornament.ts";
 import { cartCount } from "./cart.service.ts";
-import { escapeHtml } from "../core/http.ts";
+import { escapeHtml, escapeAttr } from "../core/http.ts";
 import { contentRepo } from "../modules/content/content.db.ts";
 
 registerCss(/* css */ `
@@ -35,12 +35,8 @@ registerCss(/* css */ `
   background: linear-gradient(155deg, var(--card), #e7dccd);
   display: grid; place-items: center; border-left: 1px solid var(--border);
 }
-.hero__monogram {
-  position: absolute; left: 50%; top: 50%; transform: translate(-56%, -50%);
-  font-family: var(--font-serif); font-weight: 500; line-height: 1;
-  font-size: clamp(12rem, 24vw, 19rem); color: var(--accent); opacity: 0.13;
-}
 .hero__aside .leaf-branch { position: relative; z-index: 1; height: min(82%, 300px); width: auto; opacity: 0.92; }
+.hero__image { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 0 0 3.75rem; }
 .values__item { text-align: center; padding: 0 1rem; }
@@ -54,10 +50,11 @@ registerCss(/* css */ `
 
 @media (max-width: 760px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
-  .hero__body { min-width: 0; padding: clamp(1.75rem, 6vw, 2.5rem); }
+  .hero__aside { grid-row: 1; min-height: auto; height: 260px; border-left: none; border-top: none; border-bottom: 1px solid var(--border); }
+  .hero__aside .leaf-branch { height: min(75%, 150px); }
+  .hero__image { object-position: top; }
+  .hero__body { grid-row: 2; min-width: 0; padding: clamp(1.75rem, 6vw, 2.5rem); }
   .hero h1 { font-size: clamp(1.9rem, 8.5vw, 2.8rem); overflow-wrap: break-word; }
-  .hero__aside { min-height: 220px; border-left: none; border-top: 1px solid var(--border); }
-  .hero__monogram { font-size: 12rem; }
   .values { grid-template-columns: 1fr; gap: 1.75rem; }
 }
 `);
@@ -89,6 +86,11 @@ function homePage(user: User | null, cartCountValue: number): string {
     )
     .join("");
 
+  const heroImage = contentRepo.getValue("hero_image", "").trim();
+  const heroAside = heroImage
+    ? `<img src="${escapeAttr(heroImage)}" alt="CRISTA" class="hero__image">`
+    : leafBranch();
+
   const body = `
     <section class="hero">
       <div class="hero__body">
@@ -103,8 +105,7 @@ function homePage(user: User | null, cartCountValue: number): string {
         </div>
       </div>
       <div class="hero__aside">
-        <span class="hero__monogram">C</span>
-        ${leafBranch()}
+        ${heroAside}
       </div>
     </section>
 

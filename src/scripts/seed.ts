@@ -1,11 +1,18 @@
 /**
- * Development seed: categories, products, variants (matches the mockups).
- * Run with `bun run seed`. Idempotent: skips if products already exist.
+ * Development seed: content, shipping, categories, products, variants (matches the mockups).
+ * Run with `bun run seed`. Product seeding is skipped if products already exist;
+ * content and shipping are always seeded idempotently.
  */
 import { categoriesRepo } from "../modules/categories/categories.db.ts";
 import { productsRepo } from "../modules/products/products.db.ts";
 import { variantsRepo } from "../modules/variants/variants.db.ts";
 import { shippingRepo } from "../modules/shipping/shipping.db.ts";
+import { contentRepo } from "../modules/content/content.db.ts";
+import { CONTENT_FIELDS } from "../modules/content/content.rules.ts";
+
+function seedContent(): void {
+  for (const f of CONTENT_FIELDS) contentRepo.ensureDefault(f.key, f.default);
+}
 
 function seedShipping(): void {
   if (shippingRepo.listRates().length > 0) return;
@@ -19,11 +26,12 @@ function seedShipping(): void {
 }
 
 function main(): void {
+  seedContent();
   seedShipping();
 
   const existing = productsRepo.paginate({ pageSize: 1 });
   if (existing.total > 0) {
-    console.log("Seed: ya hay productos, no se hace nada.");
+    console.log("Seed: contenido y envíos actualizados; productos ya existen, no se crean nuevos.");
     return;
   }
 
@@ -77,7 +85,7 @@ function main(): void {
   variantsRepo.insert(carcasa.id, { name: "iPhone 15", sku: "CAR-IP15", price_cents: null, stock: 15, low_stock_threshold: 4, active: true });
   variantsRepo.insert(carcasa.id, { name: "Samsung S24", sku: "CAR-S24", price_cents: null, stock: 0, low_stock_threshold: 4, active: true });
 
-  console.log("Seed: 2 categorías, 3 productos y sus variantes creados.");
+  console.log("Seed: contenido, envíos, 2 categorías, 3 productos y sus variantes creados.");
 }
 
 main();

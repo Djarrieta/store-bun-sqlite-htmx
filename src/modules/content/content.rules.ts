@@ -15,6 +15,8 @@ export interface ContentField {
   key: string;
   label: string;
   default: string;
+  type?: "text" | "image_url";
+  help?: string;
 }
 
 /** Curated content blocks surfaced in the storefront. */
@@ -31,8 +33,13 @@ export const CONTENT_FIELDS: ContentField[] = [
     default:
       "Aceptamos pago por Nequi (transferencia + comprobante). Enviamos a las principales ciudades de Colombia; el costo se calcula en el checkout según tu ciudad.",
   },
+  {
+    key: "hero_image",
+    label: "Imagen del hero",
+    type: "image_url",
+    default: "/brand/hero.png",
+    help: "URL relativa de la imagen principal del home (ej. /brand/hero.png).",
+  },
 ];
 
-export function ensureContentDefaults(): void {
-  for (const f of CONTENT_FIELDS) contentRepo.ensureDefault(f.key, f.default);
-}
+

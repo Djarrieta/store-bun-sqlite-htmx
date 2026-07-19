@@ -2,10 +2,8 @@
 import { AppModule, registerModule, type DashboardCard } from "../../core/modules.ts";
 import type { Router } from "../../core/router.ts";
 import "./content.db.ts";
-import { CONTENT_KEY, ensureContentDefaults } from "./content.rules.ts";
+import { CONTENT_KEY } from "./content.rules.ts";
 import { registerContentRoutes } from "./content.views.ts";
-
-ensureContentDefaults();
 
 class ContentModule extends AppModule {
   readonly key = CONTENT_KEY;
