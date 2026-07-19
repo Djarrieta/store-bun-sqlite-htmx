@@ -55,11 +55,21 @@ interface IdTokenClaims {
   picture?: string;
 }
 
+function base64UrlToBytes(input: string): Uint8Array {
+  const normalized = input.replaceAll("-", "+").replaceAll("_", "/");
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 function decodeJwtPayload(idToken: string): IdTokenClaims | null {
   const parts = idToken.split(".");
   if (parts.length !== 3) return null;
   try {
-    const json = atob(parts[1]!.replaceAll("-", "+").replaceAll("_", "/"));
+    const bytes = base64UrlToBytes(parts[1]!);
+    const json = new TextDecoder().decode(bytes);
     return JSON.parse(json) as IdTokenClaims;
   } catch {
     return null;

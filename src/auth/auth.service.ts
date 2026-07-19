@@ -137,7 +137,14 @@ export function upsertOAuthUser(params: {
 }): User {
   const identity = oauthRepo.findByProviderSubject(params.provider, params.subject);
   if (identity) {
-    return usersRepo.findById(identity.user_id) as User;
+    const user = usersRepo.findById(identity.user_id) as User;
+    // Actualizar nombre/avatar desde el proveedor en cada login.
+    usersRepo.updateProfile(
+      user.id,
+      params.displayName ?? user.display_name,
+      params.avatarUrl ?? user.avatar_url,
+    );
+    return usersRepo.findById(user.id) as User;
   }
   const user = upsertUserByEmail({
     email: params.email,
