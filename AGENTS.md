@@ -20,7 +20,7 @@ bun run typecheck  # tsc --noEmit — run this to validate changes
 
 - **No test framework** and no lint step. Validate work with `bun run typecheck`.
 - No `npm`/`node` — this is a Bun project with zero runtime dependencies (only `@types/bun` + `typescript` dev deps).
-- Deploy: `start.sh` (git pull + `docker compose up -d --build` + migrations at boot). See [tech-spec.md](tech-spec.md) §17.
+- Deploy: `deploy.sh` — release (`./deploy.sh release patch|minor|major`: dev → main en un solo commit + tag `vX.Y.Z`) y despliegue en prod (`./deploy.sh`: backup SQLite + `git pull --ff-only` + `docker compose up -d --build` + health check). Migraciones al arrancar. Proceso completo en [docs/despliegue.md](docs/despliegue.md) y [tech-spec.md](tech-spec.md) §17. El skill `deploy` (`.agents/skills/deploy/`) guía el flujo.
 
 ## Environments
 
@@ -28,7 +28,7 @@ Two environments coexist in this repo:
 
 | Environment | Path | Branch | Port | DB / uploads | Process |
 |---|---|---|---|---|---|
-| Production | `/home/dario/projects/store-bun-sqlite-htmx` | `main` | `4010` (Docker → tunnel) | `./data`, `./public/uploads` | `docker compose up -d` via `start.sh` |
+| Production | `/home/dario/projects/store-bun-sqlite-htmx` | `main` | `4010` (Docker → tunnel) | `./data`, `./public/uploads` | `docker compose up -d` via `deploy.sh` |
 | Development | `/home/dario/projects/store-bun-sqlite-htmx-dev` | `dev` | `4011` (LAN/Tailscale) | Own `./data`, `./public/uploads` (gitignored worktree dirs) | systemd user unit `store-dev` (`bun --watch src/index.ts`) |
 
 - Prod runs with `NODE_ENV=production` and `DEV_LOGIN=0`. Dev runs with `NODE_ENV=development` and `DEV_LOGIN=1`.

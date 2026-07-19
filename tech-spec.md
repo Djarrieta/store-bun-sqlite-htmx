@@ -1126,28 +1126,41 @@ leer la IP real de `CF-Connecting-IP` para logging/rate-limit.
   `cloudflared` (imagen `cloudflare/cloudflared`) con `command: tunnel run` y el
   token del túnel; o correr `cloudflared` como servicio del host (systemd).
 - `data/` en volumen persistente (SQLite).
-- `start.sh` — **script de despliegue/actualización** en el servidor (se ejecuta a
-  mano o por cron/webhook para publicar la última versión). **No se crea ahora**; se
-  añade en la fase de implementación **F10** (§19).
+- `deploy.sh` — **script de release y despliegue** en el servidor (se ejecuta a
+  mano o por cron/webhook). **No se crea ahora**; se añade en la fase de
+  implementación **F10** (§19). El proceso completo se documenta en
+  `docs/despliegue.md`.
 
-**Especificación de `start.sh`** (referencia; el archivo se crea en F10). Flujo:
-`git pull` de la rama de producción → `docker compose up -d --build` (reconstruye la
-imagen y recrea el contenedor `web`; `cloudflared` sigue arriba) → las **migraciones**
-versionadas corren solas al arrancar la app (`PRAGMA user_version`, §7) **antes** de
-servir tráfico.
+**Especificación de `deploy.sh`** (referencia; el archivo se crea en F10). Dos modos:
+
+- **Release** (`./deploy.sh release patch|minor|major`): publica `dev` → `main`
+  en **un solo commit** (`git merge --squash`), con bump de versión en
+  `package.json`, tag anotado `vX.Y.Z` (semver) y *merge-back* a `dev` para
+  mantener el ancestro común. `main` acumula un commit por release; la historia
+  detallada vive en `dev`. `main` nunca se reescribe (sin force-push): los
+  reverts se hacen con `git revert`.
+- **Deploy** (`./deploy.sh`, en el checkout de producción): valida que `.env`
+  existe → **respalda** `data/app.sqlite` en `data/backups/` (conserva los
+  últimos 10; defensa puntual — Litestream sigue siendo la réplica continua
+  recomendada) → `git pull --ff-only` → `docker compose up -d --build`
+  (reconstruye la imagen y recrea el contenedor `web`; `cloudflared` sigue
+  arriba) → *health check* HTTP. Las **migraciones** versionadas corren solas al
+  arrancar la app (`PRAGMA user_version`, §7) **antes** de servir tráfico.
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail                     # aborta ante cualquier error
 cd "$(dirname "$0")"                  # raíz del repo
 
+# ... validar .env; backup de data/app.sqlite (retener los últimos 10) ...
 git pull --ff-only                    # última versión (sin merges sorpresa)
 docker compose up -d --build          # reconstruye y recrea 'web'
-docker image prune -f                 # limpia imágenes viejas (opcional)
+docker image prune -f                 # limpia imágenes viejas
+# ... health check en http://127.0.0.1:4010 ...
 ```
 
-Endurecimiento sugerido: validar que `.env` existe antes de arrancar y **respaldar**
-`data/app.sqlite` (o confiar en Litestream) antes de aplicar migraciones destructivas.
+Rollback: `git revert` del commit de release + redeploy, y/o restaurar un
+backup de `data/backups/` (procedimiento en `docs/despliegue.md`).
 
 ### SQLite en producción
 
@@ -1235,7 +1248,7 @@ Cada fase entrega algo funcional y verificable arrancando con `bun src/index.ts`
 | **F7 — Endpoint `/api/chat` + WhatsApp** | Endpoint reutilizable (secreto) + webhook Meta (verify+inbound+envío) + migración invitado→auth. | F6 |
 | **F8 — Auth Google (OAuth)** | `oauth.google.ts`, `/auth/*`, allowlist admin, cuenta opcional cliente, `users` módulo/roles. | F0 |
 | **F9 — Reportes (NL→SQL admin)** | Módulo `reports` con `readonly-sql` + gráficas. | F5, F8 |
-| **F10 — Producción** | Cloudflare Tunnel, script de despliegue `start.sh` (§17), migraciones versionadas, backups (Litestream), endurecimiento, rate-limits. | todas |
+| **F10 — Producción** | Cloudflare Tunnel, script de release/despliegue `deploy.sh` (§17, `docs/despliegue.md`), migraciones versionadas, backups (Litestream), endurecimiento, rate-limits. | todas |
 
 > El orden es una guía; F8 (auth) puede adelantarse si se quiere gatear el admin
 > desde temprano. Para desarrollo, un "dev login" temporal permite avanzar sin
