@@ -73,7 +73,7 @@ function baseFields(
   return `
     ${textField({ name: "title", label: "Título", value: values.title ?? "", required: true, error: errors?.title })}
     ${textareaField({ name: "description", label: "Descripción", value: values.description ?? "" })}
-    <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr))">
       ${textField({ name: "price", label: "Precio (COP)", value: values.priceRaw ?? "", required: true, error: errors?.price, help: "Precio base en pesos." })}
       ${textField({ name: "discount_pct", label: "Descuento (%)", type: "number", value: String(values.discount_pct ?? 0), error: errors?.discount })}
     </div>
@@ -149,7 +149,7 @@ export function variantsSection(user: User, product: Product, errors?: VariantEr
   const addForm = can(user, VARIANTS_KEY, "create")
     ? `<form hx-post="${BASE}/${product.id}/variantes" hx-target="#variants-section" hx-swap="outerHTML" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <h3>Añadir variante</h3>
-        <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr))">
           ${textField({ name: "name", label: "Nombre", value: values?.name ?? "", required: true, error: errors?.name, placeholder: "Talla M / Rojo" })}
           ${textField({ name: "sku", label: "SKU", value: values?.sku ?? "" })}
           ${textField({ name: "price", label: "Precio override (COP)", value: values?.price ?? "", help: "Vacío = usa el del producto." })}
@@ -188,15 +188,15 @@ export function editProductPage(
       <h1 style="margin:0">Editar producto</h1>
       <a class="btn btn--outline btn--sm" href="/productos/${product.id}" target="_blank">Ver en tienda ↗</a>
     </div>
-    <div class="panel" style="max-width:640px">
-      <form method="post" action="${BASE}/${product.id}" class="stack">
-        ${baseFields(categories, v, errors)}
-        <div class="row-between"><a class="btn btn--outline" href="${BASE}">Volver</a>${submitButton("Guardar cambios")}</div>
-      </form>
-    </div>
-    <div style="max-width:640px">
+    <div style="max-width:640px;margin:0 auto">
+      <div class="panel">
+        <form method="post" action="${BASE}/${product.id}" class="stack">
+          ${baseFields(categories, v, errors)}
+          <div class="row-between"><a class="btn btn--outline" href="${BASE}">Volver</a>${submitButton("Guardar cambios")}</div>
+        </form>
+      </div>
       ${imagesSection(product)}
       ${variantsSection(user, product)}
-    </div>`;
+    </div>`
   return adminShell({ user, active: PRODUCTS_KEY, title: "Editar producto", body });
 }

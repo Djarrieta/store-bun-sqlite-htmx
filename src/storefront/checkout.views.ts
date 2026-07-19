@@ -74,11 +74,11 @@ export function checkoutPage(opts: {
     <h1>Finalizar compra</h1>
     ${opts.error ? `<div class="alert alert--error">${escapeHtml(opts.error)}</div>` : ""}
     <form method="post" action="/checkout">
-      <div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;gap:2rem">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));align-items:start;gap:2rem">
         <div class="panel">
           <h2>Datos de envío</h2>
           ${textField({ name: "customer_name", label: "Nombre completo", value: v.customer_name ?? "", required: true })}
-          <div class="grid" style="grid-template-columns:1fr 1fr">
+          <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr))">
             ${textField({ name: "customer_phone", label: "Teléfono (WhatsApp)", value: v.customer_phone ?? "", type: "tel" })}
             ${textField({ name: "customer_email", label: "Correo", value: v.customer_email ?? "", type: "email" })}
           </div>

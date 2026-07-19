@@ -13,7 +13,7 @@
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "types": []
+    "types": ["bun", "node"]
   },
   "include": ["src/**/*.ts"]
 }

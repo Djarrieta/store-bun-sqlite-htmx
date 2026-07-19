@@ -8,6 +8,13 @@ data/
 # Public product uploads (runtime-generated)
 public/uploads/
 
+# Screenshots
+screenshots/*
+!screenshots/.gitkeep
+
+# Playwright MCP
+.playwright-mcp/
+
 # Secrets
 .env
 .env.local

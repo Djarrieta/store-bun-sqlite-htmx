@@ -50,11 +50,11 @@ function shippingPage(user: User): string {
     <div class="panel" style="max-width:560px">
       <h2>Nueva tarifa</h2>
       <form method="post" action="${BASE}/tarifa" class="stack">
-        <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))">
           ${textField({ name: "department", label: "Departamento", required: true })}
           ${textField({ name: "city", label: "Ciudad", required: true })}
         </div>
-        <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))">
           ${textField({ name: "price", label: "Precio (COP)", required: true })}
           ${textField({ name: "estimated_days", label: "Días estimados", type: "number" })}
         </div>

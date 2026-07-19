@@ -115,7 +115,7 @@ class InventoryRepository extends Repository<StockMovement & Record<string, unkn
   } {
     const page = Math.max(1, opts.page ?? 1);
     const pageSize = 20;
-    const params: Record<string, unknown> = {};
+    const params: Record<string, string | number> = {};
     const clauses: string[] = [];
     if (opts.search) {
       params.$q = `%${opts.search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}%`;
