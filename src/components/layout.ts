@@ -4,6 +4,7 @@
  */
 import { themeCss } from "../theme.ts";
 import { escapeHtml } from "../core/http.ts";
+import { flagEnabled } from "../modules/feature-flags/feature-flags.rules.ts";
 import type { User } from "../auth/auth.db.ts";
 import { renderNav } from "./nav.ts";
 import { leafDivider } from "./ornament.ts";
@@ -43,6 +44,7 @@ export function page(opts: PageOptions): string {
   </style>
   ${opts.head ?? ""}
   <script src="/vendor/htmx.min.js" defer></script>
+  <script src="/vendor/filters.js" defer></script>
 </head>
 <body>
   ${renderNav({ user: opts.user, active: opts.active, cartCount: opts.cartCount })}
@@ -60,7 +62,7 @@ export function page(opts: PageOptions): string {
         <a href="/productos">Productos</a>
         <a href="/nosotros">Nosotros</a>
         <a href="/pagos-envios">Pagos y envíos</a>
-        <a href="/chat">Asistente</a>
+        ${flagEnabled("chat_web") ? `<a href="/chat">Asistente</a>` : ""}
       </nav>
       <p class="site-footer__legal">© ${new Date().getFullYear()} CRISTA · Prendas de origen natural</p>
     </div>

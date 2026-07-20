@@ -45,7 +45,7 @@ function media(product: Product): string {
   const flag = product.discount_pct > 0 ? `<span class="pcard__flag">−${product.discount_pct}%</span>` : "";
   const inner = img
     ? `<img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt ?? product.title)}" loading="lazy">`
-    : `<span class="ph">CRISTA</span>`;
+    : `<img src="/brand/no-image.jpeg" alt="Sin imagen" loading="lazy">`;
   return `<a class="pcard__media" href="/productos/${escapeAttr(product.id)}">${inner}${flag}</a>`;
 }
 

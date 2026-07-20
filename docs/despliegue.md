@@ -1,7 +1,7 @@
 # Despliegue a producción
 
 Proceso oficial para llevar cambios de `dev` a producción. Todo pasa por el
-script [`deploy.sh`](../deploy.sh) (tech-spec §17). Existe también un skill de
+script [`deploy.sh`](../deploy.sh) (see [tech-spec/16-deployment.md](tech-spec/16-deployment.md)). Existe también un skill de
 agente (`.agents/skills/deploy/`) que guía este mismo flujo.
 
 ## Entornos
@@ -30,7 +30,7 @@ main (historia limpia: 1 commit por release, un tag por versión)
   │
   │  ./deploy.sh        (en el checkout de producción)
   │    1. valida .env
-  │    2. backup de data/app.sqlite (conserva los últimos 10)
+  │    2. backup de data/app.sqlite (conserva los últimos 3)
   │    3. git pull --ff-only
   │    4. docker compose up -d --build
   │    5. health check en http://127.0.0.1:4010
@@ -81,7 +81,7 @@ desplegada (`git describe --tags`).
 
 `./deploy.sh` copia `data/app.sqlite` a
 `data/backups/app-YYYYMMDD-HHMMSS.sqlite` **antes de cada despliegue**, y
-conserva únicamente los **últimos 10** (borra los más antiguos). Es una defensa
+conserva únicamente los **últimos 3** (borra los más antiguos). Es una defensa
 ante migraciones destructivas o corrupción detectada justo tras un deploy.
 
 ### Restaurar un backup
@@ -96,7 +96,7 @@ docker compose start web
 ### Backups continuos (recomendado, pendiente)
 
 Para protección real ante fallo de disco se recomienda **Litestream**
-(replicación continua del WAL a R2/S3), ver tech-spec §17. El backup puntual
+(replicación continua del WAL a R2/S3), ver [tech-spec/16-deployment.md](tech-spec/16-deployment.md). El backup puntual
 del script **no** reemplaza una réplica externa: ambos viven en el mismo disco.
 
 ## Verificación post-deploy

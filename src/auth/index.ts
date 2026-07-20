@@ -23,6 +23,13 @@ export function requireStaff(ctx: RouteContext): User | Response {
   return ctx.user;
 }
 
+/** Require the admin role (dashboard access). */
+export function requireAdmin(ctx: RouteContext): User | Response {
+  if (!ctx.user) return redirect(`/login?next=${encodeURIComponent(ctx.url.pathname)}`);
+  if (ctx.user.role !== "admin") return forbidden("Se requiere rol de administrador.");
+  return ctx.user;
+}
+
 /** Require a specific permission (module + action). Gated in view AND route. */
 export function requirePermission(ctx: RouteContext, moduleKey: string, action: string): User | Response {
   const guard = requireStaff(ctx);

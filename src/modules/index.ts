@@ -24,4 +24,7 @@ import "./users/index.ts";
 // F9 — Reportes (NL→SQL de solo lectura)
 import "./reports/index.ts";
 
+// F10 — Conversaciones (visor de chat admin)
+import "./chat-viewer/index.ts";
+
 export {};

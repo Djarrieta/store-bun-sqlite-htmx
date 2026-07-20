@@ -5,7 +5,7 @@
 # Uso:
 #   ./deploy.sh                             Despliega producción. Corre en el checkout
 #                                           de main: valida .env -> backup de SQLite
-#                                           (conserva 10) -> git pull --ff-only ->
+#                                           (conserva 3) -> git pull --ff-only ->
 #                                           rebuild Docker -> health check.
 #
 #   ./deploy.sh release patch|minor|major   Publica dev -> main en UN solo commit:

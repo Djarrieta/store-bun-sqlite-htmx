@@ -8,7 +8,7 @@ import { selectField, textField, submitButton } from "../../components/forms.ts"
 import { statusBadge } from "../../storefront/order.views.ts";
 import type { User } from "../../auth/auth.db.ts";
 import type { Order, OrderItem } from "./orders.db.ts";
-import { ORDERS_KEY, STATUS_FILTERS, MANUAL_STATUSES } from "./orders.rules.ts";
+import { ORDERS_KEY, STATUS_FILTERS, MANUAL_STATUSES, statusLabel } from "./orders.rules.ts";
 
 const BASE = "/admin/ordenes";
 
@@ -108,7 +108,7 @@ export function orderDetailPage(opts: {
     ? `<div class="panel">
         <h2>Estado y envío</h2>
         <form method="post" action="${BASE}/${order.id}/estado" class="stack">
-          ${selectField({ name: "status", label: "Estado", value: order.status, options: MANUAL_STATUSES.map((s) => ({ value: s, label: s })) })}
+          ${selectField({ name: "status", label: "Estado", value: order.status, options: MANUAL_STATUSES.map((s) => ({ value: s, label: statusLabel(s) })) })}
           ${textField({ name: "tracking_code", label: "Código de seguimiento", value: order.tracking_code ?? "" })}
           ${submitButton("Actualizar")}
         </form>

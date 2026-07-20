@@ -34,7 +34,7 @@ export const CONTENT_FIELDS: ContentField[] = [
   },
   {
     key: "hero_image",
-    label: "Imagen del hero",
+    label: "Imagen principal",
     type: "image_url",
     default: "/brand/hero.png",
     help: "URL relativa de la imagen principal del home (ej. /brand/hero.png).",

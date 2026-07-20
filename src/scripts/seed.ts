@@ -4,7 +4,7 @@
  * content and shipping are always seeded idempotently.
  */
 import { categoriesRepo } from "../modules/categories/categories.db.ts";
-import { productsRepo } from "../modules/products/products.db.ts";
+import { productsRepo, type ProductImage } from "../modules/products/products.db.ts";
 import { variantsRepo } from "../modules/variants/variants.db.ts";
 import { shippingRepo } from "../modules/shipping/shipping.db.ts";
 import { contentRepo } from "../modules/content/content.db.ts";
@@ -92,7 +92,32 @@ function main(): void {
   variantsRepo.insert(carcasa.id, { name: "iPhone 15", sku: "CAR-IP15", price_cents: null, stock: 15, low_stock_threshold: 4, active: true });
   variantsRepo.insert(carcasa.id, { name: "Samsung S24", sku: "CAR-S24", price_cents: null, stock: 0, low_stock_threshold: 4, active: true });
 
-  console.log("Seed: contenido, envíos, 2 categorías, 3 productos y sus variantes creados.");
+  const polo = productsRepo.insert(
+    {
+      title: "Polo Tejido Calado Manga Corta",
+      description:
+        "Polo tejido en punto calado con cuello camisero y manga corta. Prenda ligera y fresca, ideal para looks casuales y días soleados. Tejido con acabado suave al tacto y caída elegante. Disponible en varios colores.",
+      price_cents: 14_500_000,
+      discount_pct: 0,
+      category_id: ropa.id,
+      tags: ["polo", "tejido", "calado", "manga corta", "ropa", "mujer"],
+      active: true,
+    },
+    null,
+  );
+  const poloImages: ProductImage[] = [
+    { url: "/brand/polo-tejido-calado/polo-todos.jpg", alt: "Polo tejido calado en todos los colores" },
+    { url: "/brand/polo-tejido-calado/polo-celeste.png", alt: "Polo tejido calado azul cielo" },
+    { url: "/brand/polo-tejido-calado/polo-vino.png", alt: "Polo tejido calado vino" },
+    { url: "/brand/polo-tejido-calado/polo-cafe.png", alt: "Polo tejido calado café" },
+  ];
+  productsRepo.setImages(polo.id, poloImages);
+  variantsRepo.insert(polo.id, { name: "Azul Cielo", sku: "POLO-AZU", price_cents: null, stock: 8, low_stock_threshold: 3, active: true });
+  variantsRepo.insert(polo.id, { name: "Vino", sku: "POLO-VIN", price_cents: null, stock: 6, low_stock_threshold: 3, active: true });
+  variantsRepo.insert(polo.id, { name: "Café", sku: "POLO-CAF", price_cents: null, stock: 5, low_stock_threshold: 3, active: true });
+  variantsRepo.insert(polo.id, { name: "Crema", sku: "POLO-CRE", price_cents: null, stock: 7, low_stock_threshold: 3, active: true });
+
+  console.log("Seed: contenido, envíos, 2 categorías, 4 productos y sus variantes creados.");
 }
 
 main();

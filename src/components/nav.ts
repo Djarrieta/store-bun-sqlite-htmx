@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "../core/http.ts";
 import { isStaff } from "../core/permissions.ts";
+import { flagEnabled } from "../modules/feature-flags/feature-flags.rules.ts";
 import type { User } from "../auth/auth.db.ts";
 import { registerCss } from "./registry.ts";
 
@@ -59,7 +60,7 @@ export function renderNav(opts: NavOptions): string {
         ${link("/", "Inicio", "home")}
         ${link("/productos", "Productos", "catalog")}
         ${link("/nosotros", "Nosotros", "about")}
-        ${link("/chat", "Asistente", "chat")}
+        ${flagEnabled("chat_web") ? link("/chat", "Asistente", "chat") : ""}
         ${user && isStaff(user) ? link("/admin", "Admin", "admin") : ""}
         ${cartLink(cartCount)}
         ${accountControl}

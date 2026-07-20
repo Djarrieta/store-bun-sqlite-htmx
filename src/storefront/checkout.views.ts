@@ -104,5 +104,5 @@ export function checkoutPage(opts: {
         </div>
       </div>
     </form>`;
-  return page({ title: "Checkout", user: opts.user, active: "catalog", cartCount: opts.summary.count, body });
+  return page({ title: "Finalizar compra", user: opts.user, active: "catalog", cartCount: opts.summary.count, body });
 }

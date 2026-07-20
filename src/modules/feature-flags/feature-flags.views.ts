@@ -27,7 +27,7 @@ function flagRow(key: string, label: string, description: string, enabled: boole
 
 function flagsPage(user: User): string {
   const rows = FLAGS.map((f) => flagRow(f.key, f.label, f.description, flagsRepo.isEnabled(f.key))).join("");
-  return adminShell({ user, active: FLAGS_KEY, title: "Feature flags", body: `<div class="panel"><h1>Feature flags</h1>${rows}</div>` });
+  return adminShell({ user, active: FLAGS_KEY, title: "Funcionalidades", body: `<div class="panel"><h1>Funcionalidades</h1>${rows}</div>` });
 }
 
 export function registerFeatureFlagsRoutes(router: Router): void {

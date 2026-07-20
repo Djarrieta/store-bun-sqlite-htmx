@@ -76,7 +76,7 @@ export function catalogPage(opts: { user: User | null; cartCount: number; data: 
         <input class="input" type="search" name="q" value="${escapeAttr(data.q)}" placeholder="Buscar productos…"
           hx-get="${searchUrl}" hx-target="#catalog-grid" hx-swap="innerHTML"
           hx-trigger="keyup changed delay:300ms, search" hx-push-url="true">
-        <select class="select" onchange="if(this.value)window.location=this.value">
+        <select class="select" id="category-filter">
           <option value="/productos"${!data.activeCategory ? " selected" : ""}>Todas las categorías</option>
           ${data.categories.map((c) => `<option value="/categorias/${escapeAttr(c.slug)}"${data.activeCategory?.id === c.id ? " selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
         </select>
@@ -104,7 +104,7 @@ export function productDetailPage(opts: {
 
   const mainImg = images[0]
     ? `<img src="${escapeAttr(images[0].url)}" alt="${escapeAttr(images[0].alt ?? product.title)}">`
-    : `<span class="ph">CRISTA</span>`;
+    : `<img src="/brand/no-image.jpeg" alt="Sin imagen" loading="lazy">`;
 
   const inStock = variants.filter((v) => v.stock > 0);
   const buyBox = inStock.length

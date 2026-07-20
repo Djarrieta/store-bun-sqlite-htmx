@@ -21,6 +21,7 @@ screenshots/*
 # Secrets
 .env
 .env.local
+deploy/credentials.json
 
 # Logs / OS
 *.log
