@@ -132,12 +132,12 @@ cmd_deploy() {
   [ -f .env ] || die "falta el archivo .env"
 
   # 2) Backup de SQLite antes de desplegar (defensa; Litestream = continuo).
-  #    Conserva solo los últimos 10.
+  #    Conserva solo los últimos 3.
   if [ -f data/app.sqlite ]; then
     mkdir -p data/backups
     cp data/app.sqlite "data/backups/app-$(date +%Y%m%d-%H%M%S).sqlite"
-    ls -1t data/backups/app-*.sqlite | tail -n +11 | xargs -r rm -f
-    echo "==> Backup creado en data/backups/ (se conservan los últimos 10)"
+    ls -1t data/backups/app-*.sqlite | tail -n +4 | xargs -r rm -f
+    echo "==> Backup creado en data/backups/ (se conservan los últimos 3)"
   fi
 
   # 3) Última versión de main (sin merges sorpresa)

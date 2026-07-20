@@ -9,9 +9,15 @@ import { variantsRepo } from "../modules/variants/variants.db.ts";
 import { shippingRepo } from "../modules/shipping/shipping.db.ts";
 import { contentRepo } from "../modules/content/content.db.ts";
 import { CONTENT_FIELDS } from "../modules/content/content.rules.ts";
+import { flagsRepo } from "../modules/feature-flags/feature-flags.db.ts";
+import { FLAGS } from "../modules/feature-flags/feature-flags.rules.ts";
 
 function seedContent(): void {
   for (const f of CONTENT_FIELDS) contentRepo.ensureDefault(f.key, f.default);
+}
+
+function seedFlags(): void {
+  for (const f of FLAGS) flagsRepo.ensureFlag(f.key, f.default);
 }
 
 function seedShipping(): void {
@@ -27,6 +33,7 @@ function seedShipping(): void {
 
 function main(): void {
   seedContent();
+  seedFlags();
   seedShipping();
 
   const existing = productsRepo.paginate({ pageSize: 1 });

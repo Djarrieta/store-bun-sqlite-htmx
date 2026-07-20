@@ -1,6 +1,5 @@
 /** Content permissions + curated editable keys (tech-spec §12). */
 import { registerPermissions, type PermissionMatrix } from "../../core/permissions.ts";
-import { contentRepo } from "./content.db.ts";
 
 export const CONTENT_KEY = "content";
 

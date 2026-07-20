@@ -2,10 +2,8 @@
 import { AppModule, registerModule, type DashboardCard } from "../../core/modules.ts";
 import type { Router } from "../../core/router.ts";
 import "./feature-flags.db.ts";
-import { FLAGS_KEY, ensureFlagDefaults } from "./feature-flags.rules.ts";
+import { FLAGS_KEY } from "./feature-flags.rules.ts";
 import { registerFeatureFlagsRoutes } from "./feature-flags.views.ts";
-
-ensureFlagDefaults();
 
 class FeatureFlagsModule extends AppModule {
   readonly key = FLAGS_KEY;
