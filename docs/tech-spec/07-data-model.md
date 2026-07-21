@@ -20,7 +20,7 @@ Each module defines its own tables in `<n>.db.ts` via `CREATE TABLE IF NOT EXIST
 
 ### `categories`
 
-Product categories. Key fields: `id`, `name`, `slug` (unique). Modules may add `description`, `image_url`, `sort_order`, search columns, etc.
+Product categories. Key fields: `id`, `name` (unique). Modules may add `description`, `image_url`, `sort_order`, search columns, etc.
 
 ### `products`
 

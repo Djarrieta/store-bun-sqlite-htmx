@@ -58,12 +58,12 @@ export const TOOLS: ChatTool[] = [
         type: "object",
         properties: {
           search: { type: "string", description: "Texto a buscar (nombre, etiqueta)." },
-          category: { type: "string", description: "Slug de categoría opcional." },
+          category: { type: "string", description: "ID de categoría opcional." },
         },
       },
     },
     handler: (args) => {
-      const category = args.category ? categoriesRepo.findBySlug(String(args.category)) : null;
+      const category = args.category ? categoriesRepo.findById(String(args.category)) : null;
       const page = productsRepo.listPublic({
         search: args.search ? String(args.search) : undefined,
         categoryId: category?.id,
@@ -83,7 +83,7 @@ export const TOOLS: ChatTool[] = [
     handler: () => {
       const cats = categoriesRepo.listAll();
       if (cats.length === 0) return "No hay categorías.";
-      return cats.map((c) => `• ${c.name} (${c.slug})`).join("\n");
+      return cats.map((c) => `• ${c.name}`).join("\n");
     },
   },
   {

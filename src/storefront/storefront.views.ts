@@ -47,7 +47,7 @@ export function catalogGrid(data: CatalogData): string {
         .join("")
     : `<div class="panel"><p class="muted" style="margin:0">No se encontraron productos.</p></div>`;
 
-  const base = data.activeCategory ? `/categorias/${data.activeCategory.slug}` : "/productos";
+  const base = data.activeCategory ? `/categorias/${data.activeCategory.id}` : "/productos";
   const q = data.q;
   const pager =
     data.pageData.totalPages > 1
@@ -65,7 +65,7 @@ export function catalogPage(opts: { user: User | null; cartCount: number; data: 
   const { data } = opts;
   const title = data.activeCategory ? data.activeCategory.name : "Productos";
   const eyebrow = data.activeCategory ? "Categoría" : "Tienda";
-  const searchUrl = data.activeCategory ? `/categorias/${data.activeCategory.slug}` : "/productos";
+  const searchUrl = data.activeCategory ? `/categorias/${data.activeCategory.id}` : "/productos";
   const body = `
     <div class="page-head">
       <span class="eyebrow">${eyebrow}</span>
@@ -79,7 +79,7 @@ export function catalogPage(opts: { user: User | null; cartCount: number; data: 
           hx-trigger="keyup changed delay:300ms, search" hx-push-url="true">
         <select class="select" id="category-filter">
           <option value="/productos"${!data.activeCategory ? " selected" : ""}>Todas las categorías</option>
-          ${data.categories.map((c) => `<option value="/categorias/${escapeAttr(c.slug)}"${data.activeCategory?.id === c.id ? " selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
+          ${data.categories.map((c) => `<option value="/categorias/${escapeAttr(c.id)}"${data.activeCategory?.id === c.id ? " selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
         </select>
       </div>
     </div>

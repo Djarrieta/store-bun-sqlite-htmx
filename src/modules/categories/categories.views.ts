@@ -30,7 +30,7 @@ export function categoriesListFragment(user: User, pageData: Page<Category>, q: 
     totalPages: pageData.totalPages,
     baseUrl: BASE,
     searchQuery: q,
-    renderRow: (c) => dataRow({ title: c.name, meta: `<code>${escapeHtml(c.slug)}</code>`, actions: rowActions(user, c) }),
+    renderRow: (c) => dataRow({ title: c.name, actions: rowActions(user, c) }),
     emptyText: "No hay categorías todavía.",
   });
 }
@@ -49,7 +49,7 @@ export function categoriesListPage(user: User, pageData: Page<Category>, q: stri
         baseUrl: BASE,
         searchQuery: q,
         searchPlaceholder: "Buscar categorías…",
-        renderRow: (c) => dataRow({ title: c.name, meta: `<code>${escapeHtml(c.slug)}</code>`, actions: rowActions(user, c) }),
+        renderRow: (c) => dataRow({ title: c.name, actions: rowActions(user, c) }),
         emptyText: "No hay categorías todavía.",
       })}
     </div>`;
@@ -68,7 +68,6 @@ export function categoryFormPage(
       <h1>${editing ? "Editar" : "Nueva"} categoría</h1>
       <form method="post" action="${action}" class="stack">
         ${textField({ name: "name", label: "Nombre", value: (v as CategoryInput).name ?? "", required: true, error: opts.errors?.name })}
-        ${textField({ name: "slug", label: "Slug", value: (v as CategoryInput).slug ?? "", error: opts.errors?.slug, help: "Se genera automáticamente si lo dejas vacío." })}
         <div class="row-between">
           <a class="btn btn--outline" href="${BASE}">Cancelar</a>
           ${submitButton(editing ? "Guardar" : "Crear")}

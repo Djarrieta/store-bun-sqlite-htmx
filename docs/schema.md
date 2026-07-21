@@ -99,8 +99,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 ```sql
 CREATE TABLE IF NOT EXISTS categories (
   id    TEXT PRIMARY KEY,
-  name  TEXT NOT NULL,
-  slug  TEXT NOT NULL UNIQUE,
+  name  TEXT NOT NULL UNIQUE,
   name_search TEXT NOT NULL DEFAULT ''
 );
 

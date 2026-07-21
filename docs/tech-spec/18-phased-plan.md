@@ -14,7 +14,7 @@ Source of truth for the implementation roadmap.
 
 - `products` module (CRUD with images).
 - `variants` module (CRUD, stock).
-- Public catalog pages (`/productos`, `/productos/:slug`).
+- Public catalog pages (`/productos`, `/productos/:id`).
 - Image upload pipeline.
 
 ## Phase 2 — Orders + Payments (Week 3)

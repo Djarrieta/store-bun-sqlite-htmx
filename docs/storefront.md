@@ -11,7 +11,7 @@ Public routes are resolved **before** the session auth guard.
 | `GET /` | Home: grid of featured/active products. |
 | `GET /productos` | Catalog with search + category filter + pagination (HTMX). |
 | `GET /productos/:id` | Product detail: images, description, variant selector, price, stock, add-to-cart/buy. |
-| `GET /categorias/:slug` | Catalog filtered by category. |
+| `GET /categorias/:id` | Catalog filtered by category. |
 | `GET /carrito` | Cart. |
 | `GET /checkout` | Shipping data + summary + Nequi payment instructions. |
 | `GET /orden/:id` | Order status. |

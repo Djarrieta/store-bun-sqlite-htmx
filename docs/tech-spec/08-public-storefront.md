@@ -9,7 +9,7 @@ Source of truth for public routes, catalog browsing, and product detail pages.
 | `/` | GET | Home page / landing |
 | `/productos` | GET | Product catalog (paginated, filterable by category) |
 | `/productos/:id` | GET | Product detail (images, variants, price, stock, add-to-cart) |
-| `/categorias/:slug` | GET | Catalog filtered by category |
+| `/categorias/:id` | GET | Catalog filtered by category |
 | `/carrito` | GET | Cart |
 | `/checkout` | GET | Shipping data + summary + payment instructions |
 | `/orden/:id` | GET | Order status + proof upload |

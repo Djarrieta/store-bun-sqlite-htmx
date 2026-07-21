@@ -79,9 +79,8 @@ async function main(): Promise<void> {
     return;
   }
 
-  const ropa = categoriesRepo.findBySlug("ropa") ?? categoriesRepo.insert("Ropa", "ropa");
-  const accesorios =
-    categoriesRepo.findBySlug("accesorios") ?? categoriesRepo.insert("Accesorios", "accesorios");
+  const ropa = categoriesRepo.findByName("Ropa") ?? categoriesRepo.insert("Ropa");
+  const accesorios = categoriesRepo.findByName("Accesorios") ?? categoriesRepo.insert("Accesorios");
 
   // ── A: Single product price, sizes inherit ──────────────────────────
   const camiseta = productsRepo.insert(

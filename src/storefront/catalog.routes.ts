@@ -1,4 +1,4 @@
-/** Public catalog: /productos and /categorias/:slug (search + filter + paginate). */
+/** Public catalog: /productos and /categorias/:id (search + filter + paginate). */
 import type { Router, RouteContext } from "../core/router.ts";
 import { html, fragment, notFound } from "../core/http.ts";
 import { productsRepo } from "../modules/products/products.db.ts";
@@ -36,8 +36,8 @@ function renderCatalog(ctx: RouteContext, category: Category | null): Response {
 export function registerCatalogRoutes(router: Router): void {
   router.get("/productos", (ctx) => renderCatalog(ctx, null));
 
-  router.get("/categorias/:slug", (ctx) => {
-    const category = categoriesRepo.findBySlug(ctx.params.slug!);
+  router.get("/categorias/:id", (ctx) => {
+    const category = categoriesRepo.findById(ctx.params.id!);
     if (!category) return notFound("Categoría no encontrada.");
     return renderCatalog(ctx, category);
   });
