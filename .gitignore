@@ -15,7 +15,9 @@ screenshots/*
 # Playwright MCP
 .playwright-mcp/
 
-
+# Plans (working docs, not committed)
+plan/
+!plan/.gitkeep
 
 # Secrets
 .env

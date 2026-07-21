@@ -7,7 +7,7 @@ import { registerCss } from "../components/registry.ts";
 import { productsRepo } from "../modules/products/products.db.ts";
 import { variantsRepo, type Variant } from "../modules/variants/variants.db.ts";
 import { productCard } from "../components/storefront/product-card.ts";
-import { leafDivider, leafBranch, leafMark } from "../components/ornament.ts";
+import { leafDivider, leafMark } from "../components/ornament.ts";
 import { cartCount } from "./cart.service.ts";
 import { escapeHtml, escapeAttr } from "../core/http.ts";
 import { contentRepo } from "../modules/content/content.db.ts";
@@ -15,28 +15,45 @@ import { contentRepo } from "../modules/content/content.db.ts";
 registerCss(/* css */ `
 .hero {
   position: relative; overflow: hidden;
-  display: grid; grid-template-columns: 1.12fr 0.88fr;
+  aspect-ratio: 16 / 9; min-height: 280px;
   border: 1px solid var(--border); border-radius: var(--radius-card);
   background: var(--surface); box-shadow: var(--shadow-soft);
   margin-bottom: 3.5rem;
 }
+.hero::before {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none; z-index: 1;
+}
+.hero--no-image::before { display: none; }
+.hero__image {
+  width: 100%; height: 100%; object-fit: cover; object-position: top;
+  display: block; position: absolute; inset: 0;
+}
 .hero__body {
-  padding: clamp(2rem, 5vw, 4rem);
+  position: relative; z-index: 2;
+  padding: clamp(1.5rem, 5vw, 2rem);
   display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  height: 100%;
 }
-.hero__eyebrow { color: var(--accent); letter-spacing: 0.28em; text-transform: uppercase; font-size: 0.72rem; font-weight: 600; }
-.hero h1 { font-size: clamp(2.5rem, 5.4vw, 3.8rem); margin: 0.7rem 0 0; color: var(--fg); text-wrap: balance; }
-.hero .ornament { justify-content: flex-start; margin: 1.1rem 0 0; }
-.hero__lead { color: var(--muted); max-width: 42ch; margin: 1.2rem 0 1.8rem; font-size: 1.02rem; }
+.hero__eyebrow { color: #fff; opacity: 0.85; letter-spacing: 0.28em; text-transform: uppercase; font-size: 0.72rem; font-weight: 600; }
+.hero h1 { font-size: clamp(1.9rem, 8vw, 2.5rem); margin: 0.7rem 0 0; color: #fff; text-wrap: balance; overflow-wrap: break-word; }
+.hero__lead { color: #fff; opacity: 0.88; max-width: 42ch; margin: 1.2rem 0 1.8rem; font-size: 1.02rem; }
 .hero__cta { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-.hero__link { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.78rem; font-weight: 600; }
-.hero__aside {
-  position: relative; overflow: hidden; min-height: 360px;
-  background: linear-gradient(155deg, var(--card), #e7dccd);
-  display: grid; place-items: center; border-left: 1px solid var(--border);
+
+.hero--no-image .hero__eyebrow { color: var(--accent); opacity: 1; }
+.hero--no-image h1 { color: var(--fg); }
+.hero--no-image .hero__lead { color: var(--muted); opacity: 1; }
+
+@media (min-width: 640px) {
+  .hero { max-height: 540px; }
+  .hero__body { padding: clamp(2rem, 4vw, 3rem); }
+  .hero h1 { font-size: clamp(2.2rem, 6vw, 3rem); }
 }
-.hero__aside .leaf-branch { position: relative; z-index: 1; height: min(82%, 300px); width: auto; opacity: 0.92; }
-.hero__image { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (min-width: 960px) {
+  .hero__body { padding: clamp(2.5rem, 4vw, 4rem); }
+  .hero h1 { font-size: clamp(2.5rem, 5.4vw, 3.8rem); }
+}
 
 .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 0 0 3.75rem; }
 .values__item { text-align: center; padding: 0 1rem; }
@@ -48,13 +65,7 @@ registerCss(/* css */ `
 .section-head--center h2 { margin: 0.15rem 0; }
 .section-more { display: flex; justify-content: center; margin-top: 2.75rem; }
 
-@media (max-width: 760px) {
-  .hero { grid-template-columns: minmax(0, 1fr); }
-  .hero__aside { grid-row: 1; min-height: auto; height: 260px; border-left: none; border-top: none; border-bottom: 1px solid var(--border); }
-  .hero__aside .leaf-branch { height: min(75%, 150px); }
-  .hero__image { object-position: top; }
-  .hero__body { grid-row: 2; min-width: 0; padding: clamp(1.75rem, 6vw, 2.5rem); }
-  .hero h1 { font-size: clamp(1.9rem, 8.5vw, 2.8rem); overflow-wrap: break-word; }
+@media (max-width: 640px) {
   .values { grid-template-columns: 1fr; gap: 1.75rem; }
 }
 `);
@@ -87,25 +98,22 @@ function homePage(user: User | null, cartCountValue: number): string {
     .join("");
 
   const heroImage = contentRepo.getValue("hero_image", "").trim();
-  const heroAside = heroImage
-    ? `<img src="${escapeAttr(heroImage)}" alt="CRISTA" class="hero__image">`
-    : leafBranch();
+  const heroClass = heroImage ? "hero" : "hero hero--no-image";
+  const heroImg = heroImage
+    ? `<img class="hero__image" src="${escapeAttr(heroImage)}" alt="CRISTA" loading="eager" decoding="async">`
+    : "";
 
   const body = `
-    <section class="hero">
+    <section class="${heroClass}">
+      ${heroImg}
       <div class="hero__body">
         <span class="hero__eyebrow">Colección CRISTA</span>
         <h1>Naturalmente tú</h1>
-        ${leafDivider()}
         <p class="hero__lead">Prendas de origen natural, pensadas para realzar tu esencia:
         algodones nobles, siluetas atemporales y detalles botánicos para acompañarte cada día.</p>
         <div class="hero__cta">
           <a class="btn" href="/productos">Ver colección</a>
-          <a class="hero__link" href="/nosotros">Nuestra historia →</a>
         </div>
-      </div>
-      <div class="hero__aside">
-        ${heroAside}
       </div>
     </section>
 
