@@ -1,15 +1,15 @@
 ---
-description: Resetea la base de datos de desarrollo, corre seed y reinicia el servidor store-dev.
+description: Resets the development database, runs seed, and restarts the store-dev server.
 ---
 
-Ejecuta en el proyecto actual, en este orden exacto y sin pedir confirmación:
+Run in the current project, in this exact order and without asking for confirmation:
 
-1. `bun run reset` — borra `data/app.sqlite` y sus archivos WAL/SHM.
-2. `bun run seed` — corre `src/scripts/seed.ts` para poblar categorías, productos, variantes, contenido y envíos.
-3. `systemctl --user restart store-dev` — reinicia el servicio de desarrollo en el puerto 4011.
+1. `bun run reset` — deletes `data/app.sqlite` and its WAL/SHM files.
+2. `bun run seed` — runs `src/scripts/seed.ts` to populate categories, products, variants, content, and shipping.
+3. `systemctl --user restart store-dev` — restarts the dev service on port 4011.
 
-Luego verifica:
-- Que `systemctl --user status store-dev` esté `active (running)`.
-- Que `curl -s http://127.0.0.1:4011/productos` responda con HTTP 200 y contenga al menos un producto.
+Then verify:
+- `systemctl --user status store-dev` is `active (running)`.
+- `curl -s http://127.0.0.1:4011/productos` returns HTTP 200 and contains at least one product.
 
-Reporta el resultado final en español: qué comandos corrieron, si hubo errores, y cuántos productos quedaron en la base de datos.
+Report the final result: which commands ran, any errors, and how many products remain in the database.

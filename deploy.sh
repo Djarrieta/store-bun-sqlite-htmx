@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# deploy.sh — release y despliegue a producción (tech-spec §17, docs/despliegue.md).
+# deploy.sh — release and production deploy (tech-spec §17, docs/deployment.md).
 #
 # Uso:
 #   ./deploy.sh                             Despliega producción. Corre en el checkout
@@ -170,7 +170,7 @@ case "${1:-}" in
   "") cmd_deploy ;;
   release) shift; cmd_release "${1:-}" ;;
   -h|--help|help)
-    echo "Uso: ./deploy.sh [release patch|minor|major]  (ver docs/despliegue.md)"
+    echo "Uso: ./deploy.sh [release patch|minor|major]  (ver docs/deployment.md)"
     ;;
   *) die "uso: ./deploy.sh [release patch|minor|major]" ;;
 esac

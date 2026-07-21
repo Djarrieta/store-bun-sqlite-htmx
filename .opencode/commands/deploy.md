@@ -1,66 +1,66 @@
 ---
-description: Publica un release a producción (bump, merge, Docker deploy).
+description: Publishes a release to production (bump, merge, Docker deploy).
 ---
 
 # Deploy
 
-Publica un release a producción del proyecto store-bun-sqlite-htmx. Referencia: `docs/despliegue.md` y `deploy.sh`.
+Publishes a production release for the store-bun-sqlite-htmx project. Reference: `docs/deployment.md` and `deploy.sh`.
 
 ## Worktrees
 
-- **Dev**: `/home/dario/projects/store-bun-sqlite-htmx-dev` (rama `dev`)
-- **Prod**: `/home/dario/projects/store-bun-sqlite-htmx` (rama `main`, puerto 4010, Docker + Cloudflare Tunnel)
+- **Dev**: `/home/dario/projects/store-bun-sqlite-htmx-dev` (branch `dev`)
+- **Prod**: `/home/dario/projects/store-bun-sqlite-htmx` (branch `main`, port 4010, Docker + Cloudflare Tunnel)
 
-## Flujo
+## Flow
 
-### 1. Inspeccionar el estado
+### 1. Inspect state
 
-Reportar antes de cualquier mutación:
-- `git status --short` en el worktree dev (debe estar limpio)
-- `git log --oneline origin/main..origin/dev` — commits del release
-- Versión actual: `grep '"version"' package.json`
+Report before any mutation:
+- `git status --short` in the dev worktree (must be clean)
+- `git log --oneline origin/main..origin/dev` — release commits
+- Current version: `grep '"version"' package.json`
 - Tags: `git tag -l`
 
-### 2. Preguntar tipo de versión y pedir confirmación
+### 2. Ask for version type and confirmation
 
-Tipos:
-- **patch** — correcciones
-- **minor** — funcionalidad nueva compatible
-- **major** — cambios incompatibles
+Types:
+- **patch** — bug fixes
+- **minor** — backward-compatible features
+- **major** — breaking changes
 
-Presentar el plan y **esperar confirmación explícita** antes de ejecutar:
-- Bump `v<actual>` → `v<nueva>` en `dev` + push
-- Squash-merge `release: v<nueva>` en `main` + tag + push
-- Merge-back a `dev` + push
-- Deploy en producción (backup, pull, rebuild Docker)
+Present the plan and **wait for explicit confirmation** before executing:
+- Bump `v<current>` → `v<new>` on `dev` + push
+- Squash-merge `release: v<new>` on `main` + tag + push
+- Merge-back to `dev` + push
+- Deploy to production (backup, pull, rebuild Docker)
 
-### 3. Ejecutar el release
+### 3. Run the release
 
 ```bash
 ./deploy.sh release patch|minor|major
 ```
 
-### 4. Ejecutar deploy en producción
+### 4. Deploy to production
 
 ```bash
 cd /home/dario/projects/store-bun-sqlite-htmx && ./deploy.sh
 ```
 
-### 5. Verificar
+### 5. Verify
 
-- `Despliegue completo: vX.Y.Z`
+- `Deploy complete: vX.Y.Z`
 - `docker ps --filter name=store-bun-sqlite-htmx-web`
 - `curl -sI https://crista.click | head -1`
 - `docker compose logs --tail=50 web`
 
-### 6. Reportar
+### 6. Report
 
-Resumen: versión, commits, health check, advertencias.
+Summary: version, commits, health check, warnings.
 
-## Restricciones
+## Constraints
 
-- **Nunca** `git push --force`, `git reset --hard` ni reescritura de historia en `main`
-- Rollback = `git revert` del commit de release + `./deploy.sh`
-- No commits directos en `main`
-- Pedir confirmación antes de cada operación que mute git o producción
-- Si el usuario solo quiere "probar en dev", no ejecutar nada de esto
+- **Never** `git push --force`, `git reset --hard`, or rewrite history on `main`
+- Rollback = `git revert` of the release commit + `./deploy.sh`
+- No direct commits on `main`
+- Ask for confirmation before each operation that mutates git or production
+- If the user only wants "to test on dev", do not execute any of this
