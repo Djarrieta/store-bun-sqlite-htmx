@@ -19,6 +19,7 @@ registerCss(/* css */ `
   border: 1px solid var(--border); border-radius: var(--radius-card);
   background: var(--surface); box-shadow: var(--shadow-soft);
   margin-bottom: 3.5rem;
+  margin-inline: auto;
 }
 .hero::before {
   content: ""; position: absolute; inset: 0;
@@ -51,6 +52,7 @@ registerCss(/* css */ `
   .hero h1 { font-size: clamp(2.2rem, 6vw, 3rem); }
 }
 @media (min-width: 960px) {
+  .hero__image { object-position: center; }
   .hero__body { padding: clamp(2.5rem, 4vw, 4rem); align-items: center; text-align: center; }
   .hero h1 { font-size: clamp(2.5rem, 5.4vw, 3.8rem); }
   .hero__lead { margin-left: auto; margin-right: auto; }
