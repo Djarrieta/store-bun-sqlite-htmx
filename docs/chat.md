@@ -58,7 +58,7 @@ Guest channels (`web_guest`, unverified WhatsApp) respond with "requires login" 
 3. If `tool_calls`, execute handlers (with channel gate) and repeat.
 4. Stop at `MAX_STEPS` or final response.
 
-The LLM is accessed via `core/llm.ts`. Provider configurable por env (`LLM_PROVIDER`: `deepseek`, `openai`, `ollama`). Responses are always in Spanish (S1).
+The LLM is accessed via `core/llm.ts`. Provider configurable via env (`LLM_PROVIDER`: `deepseek`, `openai`, `ollama`). Responses are always in Spanish (S1).
 
 ## Endpoints
 
@@ -99,7 +99,7 @@ Inside `integrations/whatsapp/`:
 4. `reply = await chatService.generateResponse({ channel: 'whatsapp', ref, text })`.
 5. Send response via Graph API: `POST /{PHONE_NUMBER_ID}/messages` with `WHATSAPP_TOKEN`.
 
-### Phone → account linking (futuro)
+### Phone → account linking (future)
 
 A number is associated with a `user` only after **verification**:
 
@@ -108,7 +108,7 @@ A number is associated with a `user` only after **verification**:
 - The customer confirms the code.
 - Only then is `users.phone` saved and the webhook treats that number as channel `auth`.
 
-**Estado actual (v1):** el enlace es directo por `users.phone` sin verificación OTP. La verificación por WhatsApp está planificada para una versión futura.
+**Current state (v1):** the link is direct via `users.phone` without OTP verification. WhatsApp verification is planned for a future version.
 
 ## Persistence, history, and migration
 
@@ -122,7 +122,7 @@ A number is associated with a `user` only after **verification**:
 The chat is one channel for the customer to send their Nequi transfer proof:
 
 - **Web**: composer accepts an image attachment (`input file`, `hx-post` multipart). Available to guest and `auth`.
-- **WhatsApp**: en v1 solo texto. La descarga de imágenes inbound vía Graph API está planificada para futuro.
+- **WhatsApp**: in v1 text only. Inbound image download via Graph API is planned for the future.
 - The image is validated (magic bytes/size) and stored in **private** storage.
 - The message is recorded in `chat_messages` with `attachment_url` / `attachment_type` (internal reference, served by guard, not a public URL).
 - If the `ref` has a `pending` order awaiting payment, the proof is attached as `payment_proof_url` and the order moves to `payment_review`.

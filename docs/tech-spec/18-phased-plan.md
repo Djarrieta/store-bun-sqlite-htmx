@@ -36,7 +36,7 @@ Source of truth for the implementation roadmap.
 
 - Chat module: provider, tools, conversation storage.
 - Web chat widget (HTMX).
-- Admin chat interface (visor de conversaciones en `/admin/conversaciones`).
+- Admin chat interface (conversation viewer at `/admin/conversaciones`).
 - Tool: `order_status`, `product_lookup`.
 
 ## Phase 5 — Polish + Deploy (Week 6)

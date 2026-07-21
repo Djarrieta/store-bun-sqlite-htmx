@@ -16,15 +16,15 @@ Source of truth for non-negotiable security rules. This is a checklist, not an o
 
 ## CSRF
 
-- **v1 actual**: No se implementan tokens CSRF. La defensa se basa en `SameSite=Lax` en cookies + patrón POST-redirect en formularios mutantes.
-- **Implementación futura**: Generar token por sesión, exponer `csrfField()` en `src/components/forms.ts`, validar en todos los POST/PUT/DELETE. Cubrir checkout, admin, `/chat/send` y carga de comprobantes.
+- **Current v1**: CSRF tokens are not implemented. Defense is based on `SameSite=Lax` in cookies + POST-redirect pattern in mutating forms.
+- **Future implementation**: Generate per-session token, expose `csrfField()` in `src/components/forms.ts`, validate in all POST/PUT/DELETE. Cover checkout, admin, `/chat/send` and proof uploads.
 
 ## File uploads
 
 - [ ] Validate **magic bytes** (file signature), not just extension.
 - [ ] Allow only `image/jpeg`, `image/png`, `image/webp`.
 - [ ] Max file size: 5 MB.
-- [ ] Re-encode images (sharp/libvips) to strip EXIF and normalize — **no implementado en v1**. Actualmente solo se valida magic bytes + allowlist de formato raster. Re-encode es mejora futura.
+- [ ] Re-encode images (sharp/libvips) to strip EXIF and normalize — **not implemented in v1**. Currently only magic bytes + raster format allowlist are validated. Re-encode is a future improvement.
 - [ ] Store with UUID filenames, never user-supplied names.
 - [ ] Set `Content-Type` and `X-Content-Type-Options: nosniff` on served files.
 
@@ -46,8 +46,8 @@ Source of truth for non-negotiable security rules. This is a checklist, not an o
 
 - [ ] `X-Content-Type-Options: nosniff` on all responses.
 - [ ] `X-Frame-Options: DENY` on HTML responses.
-- [ ] `Content-Security-Policy` with minimal allowlist (sin `unsafe-inline` en scripts).
-- [ ] `Strict-Transport-Security` — gestionado por Cloudflare Tunnel, no por la app.
+- [ ] `Content-Security-Policy` with minimal allowlist (no `unsafe-inline` in scripts).
+- [ ] `Strict-Transport-Security` — managed by Cloudflare Tunnel, not by the app.
 
 ## Environment
 

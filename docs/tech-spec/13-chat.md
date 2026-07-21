@@ -20,7 +20,7 @@ Tools live in `src/chat/chat.tools.ts`. LLM access via `src/core/llm.ts`.
 | --- | --- | --- |
 | `web_guest` | `guest_ref` cookie | Default for anonymous visitors |
 | `auth` | Session (logged-in user) | Enables order-related tools |
-| `whatsapp` | Verified phone only | Futuro; mismo backend LLM |
+| `whatsapp` | Verified phone only | Planned; same LLM backend |
 | `api` | Shared secret (`CHAT_API_SECRET`) | Server-to-server; guest-class only |
 
 ### Channel restrictions
@@ -44,13 +44,13 @@ More tools are added as business needs evolve. See [docs/chat.md](../../docs/cha
 - Customer tools are curated; no direct SQL access.
 - Admin NL → SQL is restricted to allowlisted views, read-only connection, re-authorized by role at runtime.
 
-## WhatsApp flow (futuro)
+## WhatsApp flow (planned)
 
 - Verified phone = user's `phone` in `users` table, confirmed via WhatsApp verification message.
 - On receiving an image message from a verified phone: validate (magic bytes, size), store in private storage, record in chat with image metadata.
 - On receiving text: pass to LLM with conversation history.
 
-**Estado actual (v1):** solo se procesan mensajes de texto. La descarga de imágenes y la verificación de teléfono por WhatsApp están planificadas para futuro.
+**Current state (v1):** only text messages are processed. Image download and WhatsApp phone verification are planned for the future.
 
 ## Payment proof via chat
 

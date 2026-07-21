@@ -4,27 +4,27 @@
  * here as phases land (F1: catalog, F2: inventory, …).
  */
 
-// F1 — Catálogo
+// F1 — Catalog
 import "./categories/index.ts";
 import "./products/index.ts";
 import "./variants/index.ts";
 
-// F2 — Inventario
+// F2 — Inventory
 import "./inventory/index.ts";
 
-// F5 — Pedidos + envíos + contenido + flags
+// F5 — Orders + shipping + content + flags
 import "./orders/index.ts";
 import "./shipping/index.ts";
 import "./content/index.ts";
 import "./feature-flags/index.ts";
 
-// F8 — Usuarios
+// F8 — Users
 import "./users/index.ts";
 
-// F9 — Reportes (NL→SQL de solo lectura)
+// F9 — Reports (read-only NL→SQL)
 import "./reports/index.ts";
 
-// F10 — Conversaciones (visor de chat admin)
+// F10 — Conversations (admin chat viewer)
 import "./chat-viewer/index.ts";
 
 export {};

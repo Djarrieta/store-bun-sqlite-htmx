@@ -28,15 +28,15 @@ Source of truth: [tech-spec/15-security.md](tech-spec/15-security.md). This is a
 
 - Escape every user-controlled value with `escapeHtml()` (text) or `escapeAttr()` (attributes) from `src/core/http.ts`.
 - No unescaped interpolation in views.
-- CSP restrictive (`default-src 'self'`; sin `unsafe-inline` en scripts; `frame-ancestors 'none'`).
+- CSP restrictive (`default-src 'self'`; no `unsafe-inline` in scripts; `frame-ancestors 'none'`).
 - `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ## CSRF
 
-- Cookies `SameSite=Lax` (primera línea de defensa).
-- **v1 actual**: No se implementan tokens CSRF. El patrón POST-redirect en formularios mutantes mitiga la mayoría de ataques CSRF básicos.
-- **Implementación futura**: Generar token por sesión, incluir `csrfField()` en todos los formularios mutantes (checkout, admin, `/chat/send`, carga de comprobantes), validar en cada POST/PUT/DELETE.
-- Webhooks y `/api/chat` usan firma/secret en lugar de cookies.
+- Cookies `SameSite=Lax` (first line of defense).
+- **Current v1**: CSRF tokens are not implemented. The POST-redirect pattern in mutating forms mitigates most basic CSRF attacks.
+- **Future implementation**: Generate per-session token, include `csrfField()` in all mutating forms (checkout, admin, `/chat/send`, proof uploads), validate in every POST/PUT/DELETE.
+- Webhooks and `/api/chat` use signature/secret instead of cookies.
 
 ## SQL injection
 
@@ -58,7 +58,7 @@ Source of truth: [tech-spec/15-security.md](tech-spec/15-security.md). This is a
 - Allowlist raster only: `image/jpeg`, `image/png`, `image/webp`.
 - **Reject SVG** (scriptable).
 - Enforce max size.
-- **Re-encode no implementado en v1**: solo se validan magic bytes + allowlist de formato raster. Re-encode con sharp/libvips es mejora futura para strip EXIF y normalizar.
+- **Re-encode not implemented in v1**: only magic bytes + raster format allowlist are validated. Re-encode with sharp/libvips is a future improvement to strip EXIF and normalize.
 - App-generated filename (hash/UUID); never use the original name.
 - Anti path-traversal: no `/` in resolved filename.
 - Serve with `X-Content-Type-Options: nosniff`.
