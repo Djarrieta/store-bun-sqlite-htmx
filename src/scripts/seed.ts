@@ -3,6 +3,8 @@
  * Run with `bun run seed`. Product seeding is skipped if products already exist;
  * content and shipping are always seeded idempotently.
  */
+import { mkdir, readdir, copyFile } from "node:fs/promises";
+import { join } from "node:path";
 import { categoriesRepo } from "../modules/categories/categories.db.ts";
 import { productsRepo, type ProductImage } from "../modules/products/products.db.ts";
 import { variantsRepo } from "../modules/variants/variants.db.ts";
@@ -31,7 +33,35 @@ function seedShipping(): void {
   shippingRepo.setConfig(20_000_000);
 }
 
-function main(): void {
+async function copySeedImages(): Promise<void> {
+  const srcRoot = "seed-images";
+  const destRoot = "public/uploads";
+  await mkdir(destRoot, { recursive: true });
+
+  async function walk(dir: string): Promise<string[]> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const out: string[] = [];
+    for (const e of entries) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) out.push(...(await walk(full)));
+      else if (e.isFile()) out.push(full);
+    }
+    return out;
+  }
+
+  const files = await walk(srcRoot);
+  for (const src of files) {
+    const base = src.split("/").pop()!;
+    const dest = join(destRoot, base);
+    const file = Bun.file(dest);
+    if (await file.exists()) continue;
+    await copyFile(src, dest);
+  }
+}
+
+async function main(): Promise<void> {
+  await copySeedImages();
+
   seedContent();
   seedFlags();
   seedShipping();
@@ -106,10 +136,10 @@ function main(): void {
     null,
   );
   const poloImages: ProductImage[] = [
-    { url: "/brand/polo-tejido-calado/polo-todos.jpg", alt: "Polo tejido calado en todos los colores" },
-    { url: "/brand/polo-tejido-calado/polo-celeste.png", alt: "Polo tejido calado azul cielo" },
-    { url: "/brand/polo-tejido-calado/polo-vino.png", alt: "Polo tejido calado vino" },
-    { url: "/brand/polo-tejido-calado/polo-cafe.png", alt: "Polo tejido calado café" },
+    { url: "/uploads/polo-todos.jpg", alt: "Polo tejido calado en todos los colores" },
+    { url: "/uploads/polo-celeste.png", alt: "Polo tejido calado azul cielo" },
+    { url: "/uploads/polo-vino.png", alt: "Polo tejido calado vino" },
+    { url: "/uploads/polo-cafe.jpg", alt: "Polo tejido calado café" },
   ];
   productsRepo.setImages(polo.id, poloImages);
   variantsRepo.insert(polo.id, { name: "Azul Cielo", sku: "POLO-AZU", price_cents: null, stock: 8, low_stock_threshold: 3, active: true });

@@ -11,7 +11,7 @@ sus tareas en orden, verificando cada una y deteniéndose ante errores.
 ## Uso
 
 ```
-/implement-plan plan-<nombre>
+/dj-implement-plan plan-<nombre>
 ```
 
 Si no recibe argumento, pedir el nombre del plan con `question`.
