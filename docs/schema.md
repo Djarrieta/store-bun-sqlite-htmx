@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS products (
   id           TEXT PRIMARY KEY,
   title        TEXT NOT NULL,
   description  TEXT NOT NULL DEFAULT '',
-  price_cents  INTEGER NOT NULL DEFAULT 0,
+  price_cents  INTEGER,
   discount_pct INTEGER NOT NULL DEFAULT 0,
   category_id  TEXT REFERENCES categories(id),
   tags         TEXT NOT NULL DEFAULT '[]',
@@ -129,7 +129,8 @@ CREATE TABLE IF NOT EXISTS variants (
   price_cents    INTEGER,
   stock          INTEGER NOT NULL DEFAULT 0,
   low_stock_threshold INTEGER NOT NULL DEFAULT 0,
-  active         INTEGER NOT NULL DEFAULT 1
+  active         INTEGER NOT NULL DEFAULT 1,
+  images         TEXT NOT NULL DEFAULT '[]'
 );
 ```
 

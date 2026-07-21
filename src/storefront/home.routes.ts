@@ -79,7 +79,7 @@ function homePage(user: User | null, cartCountValue: number): string {
     variantsByProduct.set(v.product_id, list);
   }
   const grid = featured.length
-    ? `<div class="catalog-grid">${featured.map((p) => productCard(p, variantsByProduct.get(p.id) ?? [])).join("")}</div>
+    ? `<div class="catalog-grid">${featured.map((p) => productCard(p, variantsByProduct.get(p.id) ?? [])).filter(Boolean).join("")}</div>
        <div class="section-more"><a class="btn btn--outline" href="/productos">Ver toda la colección</a></div>`
     : `<div class="panel"><p class="muted" style="margin:0">Pronto verás aquí nuestra colección.</p></div>`;
 

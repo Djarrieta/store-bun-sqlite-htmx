@@ -7,8 +7,8 @@ import { leafDivider } from "../components/ornament.ts";
 import { registerCss } from "../components/registry.ts";
 import type { User } from "../auth/auth.db.ts";
 import type { Page } from "../core/repository.ts";
-import { parseImages, parseTags, effectivePriceCents, type Product } from "../modules/products/products.db.ts";
-import { parseAttributes, type Variant } from "../modules/variants/variants.db.ts";
+import { parseImages, parseTags, resolveUnitPriceCents, resolveBasePriceCents, type Product } from "../modules/products/products.db.ts";
+import { parseAttributes, parseVariantImages, type Variant } from "../modules/variants/variants.db.ts";
 import type { Category } from "../modules/categories/categories.db.ts";
 
 registerCss(/* css */ `
@@ -43,6 +43,7 @@ export function catalogGrid(data: CatalogData): string {
   const cards = data.pageData.items.length
     ? data.pageData.items
         .map((p) => productCard(p, data.variantsByProduct.get(p.id) ?? []))
+        .filter(Boolean)
         .join("")
     : `<div class="panel"><p class="muted" style="margin:0">No se encontraron productos.</p></div>`;
 
@@ -94,49 +95,74 @@ export function productDetailPage(opts: {
   category: Category | null;
 }): string {
   const { product, variants } = opts;
-  const images = parseImages(product);
+  const productImages = parseImages(product);
   const tags = parseTags(product);
-  const eff = effectivePriceCents(product.price_cents, product.discount_pct);
+  const sellable = variants.filter(
+    (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
+  );
+  const selectedVariant = sellable[0];
+  const eff = resolveUnitPriceCents(product, selectedVariant);
   const priceHtml =
-    product.discount_pct > 0
-      ? `<div class="pdetail__price"><s>${escapeHtml(formatCop(product.price_cents))}</s>${escapeHtml(formatCop(eff))}</div>`
-      : `<div class="pdetail__price">${escapeHtml(formatCop(eff))}</div>`;
+    eff === null
+      ? `<div class="pdetail__price muted">No disponible</div>`
+      : product.discount_pct > 0
+        ? (() => {
+            const base = resolveBasePriceCents(product, selectedVariant);
+            return base !== null
+              ? `<div class="pdetail__price"><s>${escapeHtml(formatCop(base))}</s>${escapeHtml(formatCop(eff))}</div>`
+              : `<div class="pdetail__price">${escapeHtml(formatCop(eff))}</div>`;
+          })()
+        : `<div class="pdetail__price">${escapeHtml(formatCop(eff))}</div>`;
 
-  const mainImg = images[0]
-    ? `<img src="${escapeAttr(images[0].url)}" alt="${escapeAttr(images[0].alt ?? product.title)}">`
+  // Collect all images: product images + sellable variant images
+  const allImages: { url: string; alt: string }[] = [
+    ...productImages.map((im) => ({ url: im.url, alt: im.alt ?? product.title })),
+  ];
+  for (const v of sellable) {
+    for (const im of parseVariantImages(v)) {
+      allImages.push({ url: im.url, alt: im.alt ?? v.name });
+    }
+  }
+
+  const mainImg = allImages.length > 0
+    ? `<img src="${escapeAttr(allImages[0]!.url)}" alt="${escapeAttr(allImages[0]!.alt)}">`
     : `<img src="/brand/no-image.jpeg" alt="Sin imagen" loading="lazy">`;
 
-  const inStock = variants.filter((v) => v.stock > 0);
-  const buyBox = inStock.length
-    ? `<form hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML" class="stack" style="margin-top:1.5rem">
-        <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
-        <div class="field">
-          <label for="variant_id">Variante</label>
-          <select class="select" id="variant_id" name="variant_id" required>
-            ${inStock
-              .map((v) => {
-                const attrs = parseAttributes(v);
-                const suffix = Object.keys(attrs).length ? ` (${Object.values(attrs).join(" / ")})` : "";
-                const vp = v.price_cents !== null ? ` — ${formatCop(v.price_cents)}` : "";
-                return `<option value="${escapeAttr(v.id)}">${escapeHtml(v.name + suffix + vp)}</option>`;
-              })
-              .join("")}
-          </select>
-        </div>
-        <div class="field" style="max-width:120px">
-          <label for="qty">Cantidad</label>
-          <input class="input" id="qty" name="qty" type="number" value="1" min="1" max="20">
-        </div>
-        <button type="submit" class="btn">Agregar al carrito</button>
-      </form>`
-    : `<p class="badge badge--warn" style="margin-top:1.5rem">Agotado</p>`;
+  const thumbs =
+    allImages.length > 1
+      ? `<div class="pdetail__thumbs">${allImages.map((im) => `<img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.alt)}">`).join("")}</div>`
+      : "";
+
+  const buyBox =
+    sellable.length > 0
+      ? `<form hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML" class="stack" style="margin-top:1.5rem">
+          <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
+          <div class="field">
+            <label for="variant_id">Variante</label>
+            <select class="select" id="variant_id" name="variant_id" required>
+              ${sellable
+                .map((v) => {
+                  const unit = resolveUnitPriceCents(product, v);
+                  const vp = unit !== null ? ` — ${formatCop(unit)}` : "";
+                  return `<option value="${escapeAttr(v.id)}"${v.id === selectedVariant?.id ? " selected" : ""}>${escapeHtml(v.name)}${vp}</option>`;
+                })
+                .join("")}
+            </select>
+          </div>
+          <div class="field" style="max-width:120px">
+            <label for="qty">Cantidad</label>
+            <input class="input" id="qty" name="qty" type="number" value="1" min="1" max="20">
+          </div>
+          <button type="submit" class="btn">Agregar al carrito</button>
+        </form>`
+      : `<p class="badge badge--warn" style="margin-top:1.5rem">Agotado</p>`;
 
   const body = `
     <p style="margin-bottom:1.25rem"><a class="pdetail__back muted" href="/productos">← Volver al catálogo</a></p>
     <div class="pdetail">
       <div>
         <div class="pdetail__media">${mainImg}</div>
-        ${images.length > 1 ? `<div class="pdetail__thumbs">${images.map((im) => `<img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.alt ?? "")}">`).join("")}</div>` : ""}
+        ${thumbs}
       </div>
       <div>
         ${opts.category ? `<span class="eyebrow">${escapeHtml(opts.category.name)}</span>` : ""}

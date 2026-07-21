@@ -8,7 +8,7 @@
  */
 import type { LlmToolSpec } from "../core/llm.ts";
 import { formatCop } from "../core/format.ts";
-import { productsRepo, effectivePriceCents } from "../modules/products/products.db.ts";
+import { productsRepo, resolveUnitPriceCents } from "../modules/products/products.db.ts";
 import { variantsRepo } from "../modules/variants/variants.db.ts";
 import { categoriesRepo } from "../modules/categories/categories.db.ts";
 import { shippingRepo } from "../modules/shipping/shipping.db.ts";
@@ -40,9 +40,10 @@ const STATUS_ES: Record<string, string> = {
   refunded: "reembolsado",
 };
 
-function describeProduct(p: { id: string; title: string; price_cents: number; discount_pct: number }): string {
+function describeProduct(p: { id: string; title: string; price_cents: number | null; discount_pct: number }): string {
   const variants = variantsRepo.listActiveByProduct(p.id);
-  const price = formatCop(effectivePriceCents(p.price_cents, p.discount_pct));
+  const unit = resolveUnitPriceCents(p, variants[0]);
+  const price = unit !== null ? formatCop(unit) : "sin precio";
   const stock = variants.map((v) => `${v.name} (${v.stock > 0 ? `${v.stock} disp.` : "agotado"})`).join(", ");
   return `• ${p.title} — ${price}${stock ? ` — ${stock}` : ""}`;
 }
