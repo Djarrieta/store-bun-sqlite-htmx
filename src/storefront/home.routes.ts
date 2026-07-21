@@ -51,8 +51,10 @@ registerCss(/* css */ `
   .hero h1 { font-size: clamp(2.2rem, 6vw, 3rem); }
 }
 @media (min-width: 960px) {
-  .hero__body { padding: clamp(2.5rem, 4vw, 4rem); }
+  .hero__body { padding: clamp(2.5rem, 4vw, 4rem); align-items: center; text-align: center; }
   .hero h1 { font-size: clamp(2.5rem, 5.4vw, 3.8rem); }
+  .hero__lead { margin-left: auto; margin-right: auto; }
+  .hero__cta { justify-content: center; }
 }
 
 .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 0 0 3.75rem; }
@@ -71,7 +73,7 @@ registerCss(/* css */ `
 `);
 
 function homePage(user: User | null, cartCountValue: number): string {
-  const featured = productsRepo.listPublic({ page: 1 }).items.slice(0, 6);
+  const featured = productsRepo.listPublic({ page: 1 }).items.slice(0, 4);
   const variantsByProduct = new Map<string, Variant[]>();
   for (const v of variantsRepo.listActiveByProductIds(featured.map((p) => p.id))) {
     const list = variantsByProduct.get(v.product_id) ?? [];

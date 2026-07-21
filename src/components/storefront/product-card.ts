@@ -6,7 +6,7 @@ import { parseImages, resolveUnitPriceCents, resolveBasePriceCents, isSellableOn
 import { parseVariantImages, type Variant } from "../../modules/variants/variants.db.ts";
 
 registerCss(/* css */ `
-.pcard { display: flex; flex-direction: column; }
+.pcard { display: flex; flex-direction: column; height: 100%; }
 .pcard__carousel {
   position: relative; aspect-ratio: 4 / 5; background: var(--card);
   border-radius: var(--radius-card); overflow: hidden; margin: 0 0 0.9rem;
@@ -43,9 +43,11 @@ registerCss(/* css */ `
 .pcard__price { color: var(--accent); font-weight: 600; margin: 0.2rem 0 0; }
 .pcard__price s { color: var(--muted); font-weight: 400; margin-right: 0.4rem; font-size: 0.85em; }
 .pcard__desc { color: var(--muted); font-size: 0.88rem; margin: 0.4rem 0 0; }
-.pcard__form { margin-top: 0.9rem; }
+.pcard__form { margin-top: auto; }
 .pcard__form .field { margin-bottom: 0.5rem; }
 .pcard__form .field > label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.pcard__detail { display: block; text-align: center; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.6rem; color: var(--muted); }
+.pcard__detail:hover { color: var(--accent); }
 `);
 
 // ---- Card slides (carousel model) ----
@@ -238,5 +240,6 @@ export function productCard(
     <h3 class="pcard__title"><a href="/productos/${escapeAttr(product.id)}">${escapeHtml(product.title)}</a></h3>
     ${priceHtml(product, selected)}
     ${addForm}
+    <a class="pcard__detail" href="/productos/${escapeAttr(product.id)}">Ver detalle →</a>
   </article>`;
 }

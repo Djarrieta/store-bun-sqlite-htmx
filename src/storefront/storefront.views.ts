@@ -17,7 +17,7 @@ registerCss(/* css */ `
 .page-head h1 { margin: 0.1rem 0; }
 .filters { margin: 0 auto 2.25rem; max-width: 640px; }
 .filters__row { display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; }
-.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.75rem 1.5rem; }
+.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.75rem 1.5rem; align-items: stretch; }
 .pdetail { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
 .pdetail__media { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; aspect-ratio: 4 / 5; display: grid; place-items: center; }
 .pdetail__media img { width: 100%; height: 100%; object-fit: cover; }
