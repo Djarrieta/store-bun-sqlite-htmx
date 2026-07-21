@@ -244,12 +244,13 @@ export function productCard(
     (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
   );
 
+  const singleVariant = sellable.length === 1;
   const { imageIndex, selectedVariantId } = resolveCarouselState({
     slides,
     sellable,
     imageIndex: opts?.imageIndex,
     selectedVariantId: opts?.selectedVariantId,
-    autoSelectVariant: false,
+    autoSelectVariant: singleVariant,
   });
 
   const selected = selectedVariantId ? sellable.find((v) => v.id === selectedVariantId) : undefined;
@@ -266,8 +267,11 @@ export function productCard(
 
   // Variant selector
   const selector =
-    sellable.length > 0
-      ? `<div class="field">
+    sellable.length === 0
+      ? ""
+      : singleVariant
+        ? `<input type="hidden" name="variant_id" value="${escapeAttr(sellable[0]!.id)}">`
+        : `<div class="field">
           <label>Variante</label>
           <select class="select" name="variant_id"
             hx-get="${escapeAttr(cardFragmentUrl(product.id))}"
@@ -276,8 +280,7 @@ export function productCard(
             <option value=""${!selectedVariantId ? " selected" : ""}>Selecciona</option>
             ${sellable.map((v) => `<option value="${escapeAttr(v.id)}"${v.id === selectedVariantId ? " selected" : ""}>${escapeHtml(v.name)}</option>`).join("")}
           </select>
-        </div>`
-      : "";
+        </div>`;
 
   // Add to cart form
   const addForm =

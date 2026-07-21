@@ -135,12 +135,13 @@ export function productDetailFragment(opts: {
   );
 
   const slides = buildCardSlides(product, variants);
+  const singleVariant = sellable.length === 1;
   const { imageIndex, selectedVariantId } = resolveCarouselState({
     slides,
     sellable,
     imageIndex: opts.imageIndex,
     selectedVariantId: opts.selectedVariantId,
-    autoSelectVariant: false,
+    autoSelectVariant: singleVariant,
   });
 
   const selected = selectedVariantId ? sellable.find((v) => v.id === selectedVariantId) : undefined;
@@ -158,8 +159,11 @@ export function productDetailFragment(opts: {
       : `<img src="/brand/no-image.jpeg" alt="Sin imagen" loading="lazy">`;
 
   const selector =
-    sellable.length > 0
-      ? `<div class="field">
+    sellable.length === 0
+      ? ""
+      : singleVariant
+        ? `<input type="hidden" name="variant_id" value="${escapeAttr(sellable[0]!.id)}">`
+        : `<div class="field">
           <label for="variant_id">Variante</label>
           <select class="select" id="variant_id" name="variant_id"
             hx-get="${escapeAttr(detailFragmentUrl(product.id))}"
@@ -174,8 +178,7 @@ export function productDetailFragment(opts: {
               })
               .join("")}
           </select>
-        </div>`
-      : "";
+        </div>`;
 
   const addForm =
     sellable.length > 0
