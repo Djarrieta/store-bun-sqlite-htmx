@@ -104,17 +104,24 @@ export function cardFragmentUrl(
   opts: { imageIndex?: number; variantId?: string } = {},
 ): string {
   const params = new URLSearchParams();
-  if (opts.imageIndex != null && opts.imageIndex > 0) params.set("imageIndex", String(opts.imageIndex));
-  if (opts.variantId) params.set("variantId", opts.variantId);
+  if (opts.imageIndex != null) params.set("imageIndex", String(opts.imageIndex));
+  if (opts.variantId) params.set("variant_id", opts.variantId);
   const qs = params.toString();
   return `/productos/${productId}/card${qs ? `?${qs}` : ""}`;
 }
+
+export type CarouselUrlBuilder = (
+  productId: string,
+  opts: { imageIndex?: number; variantId?: string },
+) => string;
 
 export function productCarousel(opts: {
   productId: string;
   slides: CardSlide[];
   currentIndex: number;
   selectedVariantId?: string;
+  target?: string;
+  buildUrl?: CarouselUrlBuilder;
 }): string {
   const { productId, slides, currentIndex } = opts;
   if (slides.length === 0) return "";
@@ -125,18 +132,20 @@ export function productCarousel(opts: {
 
   const prevIdx = i > 0 ? i - 1 : slides.length - 1;
   const nextIdx = i < slides.length - 1 ? i + 1 : 0;
+  const target = escapeAttr(opts.target ?? "closest .pcard");
+  const buildUrl = opts.buildUrl ?? cardFragmentUrl;
 
   const flag = ""; // Flag rendered outside carousel by caller
 
   const arrows =
     slides.length > 1
       ? `<button type="button" class="pcard__carousel-btn pcard__carousel-btn--prev"
-          hx-get="${escapeAttr(cardFragmentUrl(productId, { ...baseParams, imageIndex: prevIdx }))}"
-          hx-target="closest .pcard" hx-swap="outerHTML"
+          hx-get="${escapeAttr(buildUrl(productId, { ...baseParams, imageIndex: prevIdx }))}"
+          hx-target="${target}" hx-swap="outerHTML"
           aria-label="Imagen anterior">‹</button>
         <button type="button" class="pcard__carousel-btn pcard__carousel-btn--next"
-          hx-get="${escapeAttr(cardFragmentUrl(productId, { ...baseParams, imageIndex: nextIdx }))}"
-          hx-target="closest .pcard" hx-swap="outerHTML"
+          hx-get="${escapeAttr(buildUrl(productId, { ...baseParams, imageIndex: nextIdx }))}"
+          hx-target="${target}" hx-swap="outerHTML"
           aria-label="Imagen siguiente">›</button>`
       : "";
 
@@ -146,8 +155,8 @@ export function productCarousel(opts: {
           .map(
             (s) =>
               `<button type="button" class="pcard__dot${s.index === i ? " pcard__dot--active" : ""}"
-                hx-get="${escapeAttr(cardFragmentUrl(productId, { ...baseParams, imageIndex: s.index }))}"
-                hx-target="closest .pcard" hx-swap="outerHTML"
+                hx-get="${escapeAttr(buildUrl(productId, { ...baseParams, imageIndex: s.index }))}"
+                hx-target="${target}" hx-swap="outerHTML"
                 aria-label="Imagen ${s.index + 1}"></button>`,
           )
           .join("")}</div>`
@@ -204,6 +213,7 @@ export function productCard(
     slides,
     currentIndex: imageIndex,
     selectedVariantId,
+    target: "closest .pcard",
   });
 
   // Variant selector
@@ -211,7 +221,7 @@ export function productCard(
     sellable.length > 1
       ? `<div class="field">
           <label>Variante</label>
-          <select class="select" name="variantId"
+          <select class="select" name="variant_id"
             hx-get="${escapeAttr(cardFragmentUrl(product.id))}"
             hx-target="closest .pcard" hx-swap="outerHTML" hx-trigger="change"
             hx-include="this">
@@ -219,7 +229,7 @@ export function productCard(
           </select>
         </div>`
       : sellable.length === 1
-        ? `<input type="hidden" name="variantId" value="${escapeAttr(sellable[0]!.id)}">`
+        ? `<input type="hidden" name="variant_id" value="${escapeAttr(sellable[0]!.id)}">`
         : "";
 
   // Add to cart form

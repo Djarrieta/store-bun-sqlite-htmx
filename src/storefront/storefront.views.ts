@@ -2,13 +2,18 @@
 import { page } from "../components/layout.ts";
 import { escapeHtml, escapeAttr } from "../core/http.ts";
 import { formatCop } from "../core/format.ts";
-import { productCard } from "../components/storefront/product-card.ts";
+import {
+  productCard,
+  productCarousel,
+  buildCardSlides,
+  firstSlideIndexForVariant,
+} from "../components/storefront/product-card.ts";
 import { leafDivider } from "../components/ornament.ts";
 import { registerCss } from "../components/registry.ts";
 import type { User } from "../auth/auth.db.ts";
 import type { Page } from "../core/repository.ts";
-import { parseImages, parseTags, resolveUnitPriceCents, resolveBasePriceCents, type Product } from "../modules/products/products.db.ts";
-import { parseAttributes, parseVariantImages, type Variant } from "../modules/variants/variants.db.ts";
+import { parseTags, resolveUnitPriceCents, resolveBasePriceCents, type Product } from "../modules/products/products.db.ts";
+import { type Variant } from "../modules/variants/variants.db.ts";
 import type { Category } from "../modules/categories/categories.db.ts";
 
 registerCss(/* css */ `
@@ -28,6 +33,10 @@ registerCss(/* css */ `
 .pdetail__price { font-family: var(--font-serif); font-size: 1.9rem; color: var(--accent); }
 .pdetail__price s { color: var(--muted); font-weight: 400; font-size: 1rem; margin-right: 0.5rem; }
 .pdetail__back { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; font-weight: 600; }
+.pdetail .pcard__carousel { margin: 0; }
+.pdetail .pcard__carousel-frame { height: 100%; }
+.pdetail__selector { margin-top: 1.5rem; }
+.pdetail__selector .field { margin-bottom: 0.75rem; }
 @media (max-width: 760px) { .pdetail { grid-template-columns: 1fr; } .filters__row { grid-template-columns: 1fr; } }
 `);
 
@@ -87,6 +96,128 @@ export function catalogPage(opts: { user: User | null; cartCount: number; data: 
   return page({ title, user: opts.user, active: "catalog", cartCount: opts.cartCount, body });
 }
 
+export function detailFragmentUrl(
+  productId: string,
+  opts: { imageIndex?: number; variantId?: string } = {},
+): string {
+  const params = new URLSearchParams();
+  if (opts.imageIndex != null) params.set("imageIndex", String(opts.imageIndex));
+  if (opts.variantId) params.set("variant_id", opts.variantId);
+  const qs = params.toString();
+  return `/productos/${productId}/fragment${qs ? `?${qs}` : ""}`;
+}
+
+function buildDetailPriceHtml(product: Product, selected: Variant | undefined): string {
+  const unit = resolveUnitPriceCents(product, selected);
+  if (unit === null) {
+    return `<div class="pdetail__price muted">Selecciona una variante para ver el precio</div>`;
+  }
+  if (product.discount_pct > 0) {
+    const base = resolveBasePriceCents(product, selected);
+    return base !== null
+      ? `<div class="pdetail__price"><s>${escapeHtml(formatCop(base))}</s>${escapeHtml(formatCop(unit))}</div>`
+      : `<div class="pdetail__price">${escapeHtml(formatCop(unit))}</div>`;
+  }
+  return `<div class="pdetail__price">${escapeHtml(formatCop(unit))}</div>`;
+}
+
+export function productDetailFragment(opts: {
+  product: Product;
+  variants: Variant[];
+  category: Category | null;
+  imageIndex?: number;
+  selectedVariantId?: string;
+}): string {
+  const { product, variants, category } = opts;
+  const tags = parseTags(product);
+  const sellable = variants.filter(
+    (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
+  );
+
+  const slides = buildCardSlides(product, variants);
+  let selectedVariantId: string | undefined =
+    opts.selectedVariantId && sellable.some((v) => v.id === opts.selectedVariantId)
+      ? opts.selectedVariantId
+      : undefined;
+
+  let imageIndex = Math.max(0, Math.min(opts.imageIndex ?? 0, Math.max(slides.length - 1, 0)));
+
+  if (opts.imageIndex != null && slides.length > 0) {
+    // Navigation from carousel controls: respect the requested image and derive variant from slide.
+    const slide = slides[imageIndex];
+    selectedVariantId = slide?.variantId ?? undefined;
+  } else if (selectedVariantId && slides.length > 0) {
+    // Variant selected from dropdown: jump to its first image.
+    const variantIndex = firstSlideIndexForVariant(slides, selectedVariantId);
+    if (variantIndex !== null) imageIndex = variantIndex;
+  }
+
+  const selected = selectedVariantId ? sellable.find((v) => v.id === selectedVariantId) : undefined;
+
+  const carousel =
+    slides.length > 0
+      ? productCarousel({
+          productId: product.id,
+          slides,
+          currentIndex: imageIndex,
+          selectedVariantId,
+          target: "#pdetail-fragment",
+          buildUrl: detailFragmentUrl,
+        })
+      : `<img src="/brand/no-image.jpeg" alt="Sin imagen" loading="lazy">`;
+
+  const selector =
+    sellable.length > 0
+      ? `<div class="field">
+          <label for="variant_id">Variante</label>
+          <select class="select" id="variant_id" name="variant_id"
+            hx-get="${escapeAttr(detailFragmentUrl(product.id))}"
+            hx-target="#pdetail-fragment" hx-swap="outerHTML" hx-trigger="change"
+            hx-include="this">
+            <option value=""${!selectedVariantId ? " selected" : ""}>Selecciona</option>
+            ${sellable
+              .map((v) => {
+                const unit = resolveUnitPriceCents(product, v);
+                const label = unit !== null ? `${escapeHtml(v.name)} — ${escapeHtml(formatCop(unit))}` : escapeHtml(v.name);
+                return `<option value="${escapeAttr(v.id)}"${v.id === selectedVariantId ? " selected" : ""}>${label}</option>`;
+              })
+              .join("")}
+          </select>
+        </div>`
+      : "";
+
+  const addForm =
+    sellable.length > 0
+      ? `<form class="pdetail__selector" hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML">
+          <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
+          ${selector}
+          <div class="field" style="max-width:120px">
+            <label for="qty">Cantidad</label>
+            <input class="input" id="qty" name="qty" type="number" value="1" min="1" max="20">
+          </div>
+          <button type="submit" class="btn"${!selectedVariantId ? " disabled aria-disabled='true'" : ""}>Agregar al carrito</button>
+        </form>`
+      : `<p class="badge badge--warn" style="margin-top:1.5rem">Agotado</p>`;
+
+  return `
+    <div id="pdetail-fragment">
+      <div class="pdetail">
+        <div>
+          <div class="pdetail__media">${carousel}</div>
+        </div>
+        <div>
+          ${category ? `<span class="eyebrow">${escapeHtml(category.name)}</span>` : ""}
+          <h1>${escapeHtml(product.title)}</h1>
+          ${buildDetailPriceHtml(product, selected)}
+          ${leafDivider()}
+          ${product.description ? `<p>${escapeHtml(product.description)}</p>` : ""}
+          ${tags.length ? `<p class="muted">${tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join(" ")}</p>` : ""}
+          ${addForm}
+        </div>
+      </div>
+    </div>`;
+}
+
 export function productDetailPage(opts: {
   user: User | null;
   cartCount: number;
@@ -94,85 +225,12 @@ export function productDetailPage(opts: {
   variants: Variant[];
   category: Category | null;
 }): string {
-  const { product, variants } = opts;
-  const productImages = parseImages(product);
-  const tags = parseTags(product);
-  const sellable = variants.filter(
-    (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
-  );
-  const selectedVariant = sellable[0];
-  const eff = resolveUnitPriceCents(product, selectedVariant);
-  const priceHtml =
-    eff === null
-      ? `<div class="pdetail__price muted">No disponible</div>`
-      : product.discount_pct > 0
-        ? (() => {
-            const base = resolveBasePriceCents(product, selectedVariant);
-            return base !== null
-              ? `<div class="pdetail__price"><s>${escapeHtml(formatCop(base))}</s>${escapeHtml(formatCop(eff))}</div>`
-              : `<div class="pdetail__price">${escapeHtml(formatCop(eff))}</div>`;
-          })()
-        : `<div class="pdetail__price">${escapeHtml(formatCop(eff))}</div>`;
-
-  // Collect all images: product images + sellable variant images
-  const allImages: { url: string; alt: string }[] = [
-    ...productImages.map((im) => ({ url: im.url, alt: im.alt ?? product.title })),
-  ];
-  for (const v of sellable) {
-    for (const im of parseVariantImages(v)) {
-      allImages.push({ url: im.url, alt: im.alt ?? v.name });
-    }
-  }
-
-  const mainImg = allImages.length > 0
-    ? `<img src="${escapeAttr(allImages[0]!.url)}" alt="${escapeAttr(allImages[0]!.alt)}">`
-    : `<img src="/brand/no-image.jpeg" alt="Sin imagen" loading="lazy">`;
-
-  const thumbs =
-    allImages.length > 1
-      ? `<div class="pdetail__thumbs">${allImages.map((im) => `<img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.alt)}">`).join("")}</div>`
-      : "";
-
-  const buyBox =
-    sellable.length > 0
-      ? `<form hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML" class="stack" style="margin-top:1.5rem">
-          <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
-          <div class="field">
-            <label for="variant_id">Variante</label>
-            <select class="select" id="variant_id" name="variant_id" required>
-              ${sellable
-                .map((v) => {
-                  const unit = resolveUnitPriceCents(product, v);
-                  const vp = unit !== null ? ` — ${formatCop(unit)}` : "";
-                  return `<option value="${escapeAttr(v.id)}"${v.id === selectedVariant?.id ? " selected" : ""}>${escapeHtml(v.name)}${vp}</option>`;
-                })
-                .join("")}
-            </select>
-          </div>
-          <div class="field" style="max-width:120px">
-            <label for="qty">Cantidad</label>
-            <input class="input" id="qty" name="qty" type="number" value="1" min="1" max="20">
-          </div>
-          <button type="submit" class="btn">Agregar al carrito</button>
-        </form>`
-      : `<p class="badge badge--warn" style="margin-top:1.5rem">Agotado</p>`;
-
   const body = `
     <p style="margin-bottom:1.25rem"><a class="pdetail__back muted" href="/productos">← Volver al catálogo</a></p>
-    <div class="pdetail">
-      <div>
-        <div class="pdetail__media">${mainImg}</div>
-        ${thumbs}
-      </div>
-      <div>
-        ${opts.category ? `<span class="eyebrow">${escapeHtml(opts.category.name)}</span>` : ""}
-        <h1>${escapeHtml(product.title)}</h1>
-        ${priceHtml}
-        ${leafDivider()}
-        ${product.description ? `<p>${escapeHtml(product.description)}</p>` : ""}
-        ${tags.length ? `<p class="muted">${tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join(" ")}</p>` : ""}
-        ${buyBox}
-      </div>
-    </div>`;
-  return page({ title: product.title, user: opts.user, active: "catalog", cartCount: opts.cartCount, body });
+    ${productDetailFragment({
+      product: opts.product,
+      variants: opts.variants,
+      category: opts.category,
+    })}`;
+  return page({ title: opts.product.title, user: opts.user, active: "catalog", cartCount: opts.cartCount, body });
 }

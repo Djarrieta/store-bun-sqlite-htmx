@@ -12,7 +12,8 @@ export function registerCartRoutes(router: Router): void {
     const form = await ctx.req.formData();
     const variantId = String(form.get("variant_id") ?? "");
     const qty = Number.parseInt(String(form.get("qty") ?? "1"), 10) || 1;
-    if (variantId) addToCart(ctx.guestRef, variantId, qty);
+    const validQty = Math.min(Math.max(qty, 1), 20);
+    if (variantId) addToCart(ctx.guestRef, variantId, validQty);
     return fragment(cartLink(cartCount(ctx.guestRef)));
   });
 
