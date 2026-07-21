@@ -6,7 +6,7 @@ import {
   productCard,
   productCarousel,
   buildCardSlides,
-  firstSlideIndexForVariant,
+  resolveCarouselState,
 } from "../components/storefront/product-card.ts";
 import { leafDivider } from "../components/ornament.ts";
 import { registerCss } from "../components/registry.ts";
@@ -135,22 +135,13 @@ export function productDetailFragment(opts: {
   );
 
   const slides = buildCardSlides(product, variants);
-  let selectedVariantId: string | undefined =
-    opts.selectedVariantId && sellable.some((v) => v.id === opts.selectedVariantId)
-      ? opts.selectedVariantId
-      : undefined;
-
-  let imageIndex = Math.max(0, Math.min(opts.imageIndex ?? 0, Math.max(slides.length - 1, 0)));
-
-  if (opts.imageIndex != null && slides.length > 0) {
-    // Navigation from carousel controls: respect the requested image and derive variant from slide.
-    const slide = slides[imageIndex];
-    selectedVariantId = slide?.variantId ?? undefined;
-  } else if (selectedVariantId && slides.length > 0) {
-    // Variant selected from dropdown: jump to its first image.
-    const variantIndex = firstSlideIndexForVariant(slides, selectedVariantId);
-    if (variantIndex !== null) imageIndex = variantIndex;
-  }
+  const { imageIndex, selectedVariantId } = resolveCarouselState({
+    slides,
+    sellable,
+    imageIndex: opts.imageIndex,
+    selectedVariantId: opts.selectedVariantId,
+    autoSelectVariant: false,
+  });
 
   const selected = selectedVariantId ? sellable.find((v) => v.id === selectedVariantId) : undefined;
 

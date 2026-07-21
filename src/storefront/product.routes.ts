@@ -14,7 +14,8 @@ export function registerProductRoutes(router: Router): void {
     if (!product || product.active !== 1) return notFound();
     const variants = variantsRepo.listActiveByProduct(product.id);
     if (!isSellableOnStorefront(product, variants)) return notFound();
-    const imageIndex = Number.parseInt(ctx.query.get("imageIndex") ?? "0", 10) || 0;
+    const rawImageIndex = ctx.query.get("imageIndex");
+    const imageIndex = rawImageIndex != null ? Number.parseInt(rawImageIndex, 10) || 0 : undefined;
     const selectedVariantId = ctx.query.get("variant_id") ?? undefined;
     const htmlCard = productCard(product, variants, { imageIndex, selectedVariantId });
     if (!htmlCard) return notFound();

@@ -99,6 +99,58 @@ export function firstSlideIndexForVariant(slides: CardSlide[], variantId: string
   return slide ? slide.index : null;
 }
 
+export interface CarouselState {
+  imageIndex: number;
+  selectedVariantId: string | undefined;
+}
+
+/**
+ * Resolves the carousel image index and selected variant consistently for
+ * product cards and product detail.
+ *
+ * Rules (mirroring the detail page behaviour):
+ * - If an image index is explicitly provided, show that image and derive the
+ *   variant from the slide (variant images force their variant selection).
+ * - If only a variant is provided, jump to that variant's first image.
+ * - Otherwise default to the first slide with no variant pre-selected.
+ * - When `autoSelectVariant` is true and no valid variant is selected yet,
+ *   fall back to the first sellable variant (used by cards to keep the "add to
+ *   cart" button usable on first load).
+ */
+export function resolveCarouselState(opts: {
+  slides: CardSlide[];
+  sellable: Variant[];
+  imageIndex?: number;
+  selectedVariantId?: string;
+  autoSelectVariant?: boolean;
+}): CarouselState {
+  const { slides, sellable } = opts;
+  let selectedVariantId =
+    opts.selectedVariantId && sellable.some((v) => v.id === opts.selectedVariantId)
+      ? opts.selectedVariantId
+      : undefined;
+
+  const hasExplicitImageIndex = opts.imageIndex != null;
+  let imageIndex = Math.max(0, Math.min(opts.imageIndex ?? 0, Math.max(slides.length - 1, 0)));
+
+  if (hasExplicitImageIndex && slides.length > 0) {
+    const slide = slides[imageIndex];
+    selectedVariantId = slide?.variantId ?? undefined;
+  } else if (selectedVariantId && slides.length > 0) {
+    const variantIndex = firstSlideIndexForVariant(slides, selectedVariantId);
+    if (variantIndex !== null) imageIndex = variantIndex;
+  }
+
+  if (
+    opts.autoSelectVariant &&
+    (!selectedVariantId || !sellable.some((v) => v.id === selectedVariantId))
+  ) {
+    selectedVariantId = sellable[0]?.id;
+  }
+
+  return { imageIndex, selectedVariantId };
+}
+
 export function cardFragmentUrl(
   productId: string,
   opts: { imageIndex?: number; variantId?: string } = {},
@@ -192,19 +244,15 @@ export function productCard(
     (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
   );
 
-  let imageIndex = Math.max(0, Math.min(opts?.imageIndex ?? 0, slides.length - 1));
-  let selectedVariantId = opts?.selectedVariantId;
+  const { imageIndex, selectedVariantId } = resolveCarouselState({
+    slides,
+    sellable,
+    imageIndex: opts?.imageIndex,
+    selectedVariantId: opts?.selectedVariantId,
+    autoSelectVariant: false,
+  });
 
-  // Slide with variantId forces variant selection
-  const slide = slides[imageIndex]!;
-  if (slide.variantId) selectedVariantId = slide.variantId;
-
-  // Always have a valid selected variant
-  if (!selectedVariantId || !sellable.some((v) => v.id === selectedVariantId)) {
-    selectedVariantId = sellable[0]?.id;
-  }
-
-  const selected = sellable.find((v) => v.id === selectedVariantId);
+  const selected = selectedVariantId ? sellable.find((v) => v.id === selectedVariantId) : undefined;
 
   const flag = product.discount_pct > 0 ? `<span class="pcard__flag">−${product.discount_pct}%</span>` : "";
 
@@ -218,19 +266,18 @@ export function productCard(
 
   // Variant selector
   const selector =
-    sellable.length > 1
+    sellable.length > 0
       ? `<div class="field">
           <label>Variante</label>
           <select class="select" name="variant_id"
             hx-get="${escapeAttr(cardFragmentUrl(product.id))}"
             hx-target="closest .pcard" hx-swap="outerHTML" hx-trigger="change"
             hx-include="this">
+            <option value=""${!selectedVariantId ? " selected" : ""}>Selecciona</option>
             ${sellable.map((v) => `<option value="${escapeAttr(v.id)}"${v.id === selectedVariantId ? " selected" : ""}>${escapeHtml(v.name)}</option>`).join("")}
           </select>
         </div>`
-      : sellable.length === 1
-        ? `<input type="hidden" name="variant_id" value="${escapeAttr(sellable[0]!.id)}">`
-        : "";
+      : "";
 
   // Add to cart form
   const addForm =
@@ -238,7 +285,7 @@ export function productCard(
       ? `<form class="pcard__form" hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML">
           <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
           ${selector}
-          <button type="submit" class="btn btn--outline btn--block">Agregar al carrito</button>
+          <button type="submit" class="btn btn--outline btn--block"${!selectedVariantId ? " disabled aria-disabled='true'" : ""}>Agregar al carrito</button>
         </form>`
       : `<div class="pcard__form"><button class="btn btn--outline btn--block" disabled aria-disabled="true">Agotado</button></div>`;
 
