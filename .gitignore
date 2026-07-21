@@ -15,8 +15,7 @@ screenshots/*
 # Playwright MCP
 .playwright-mcp/
 
-# OpenCode config
-.opencode/
+
 
 # Secrets
 .env
