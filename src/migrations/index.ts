@@ -44,18 +44,16 @@ export const MIGRATIONS: Migration[] = [
       // Disable FK checks temporarily so DROP TABLE works despite products.category_id FK.
       database.exec("PRAGMA foreign_keys = OFF");
       database.exec("DROP TABLE IF EXISTS categories_new");
-      database.exec(`
-        CREATE TABLE categories_new (
-          id          TEXT PRIMARY KEY,
-          name        TEXT NOT NULL,
-          name_search TEXT NOT NULL DEFAULT ''
-        );
-        INSERT INTO categories_new (id, name, name_search)
-          SELECT id, name, name_search FROM categories;
-        DROP TABLE categories;
-        ALTER TABLE categories_new RENAME TO categories;
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
-      `);
+      database.exec(`CREATE TABLE categories_new (
+        id          TEXT PRIMARY KEY,
+        name        TEXT NOT NULL,
+        name_search TEXT NOT NULL DEFAULT ''
+      )`);
+      database.exec(`INSERT INTO categories_new (id, name, name_search)
+        SELECT id, name, name_search FROM categories`);
+      database.exec("DROP TABLE categories");
+      database.exec("ALTER TABLE categories_new RENAME TO categories");
+      database.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name ON categories(name)");
       database.exec("PRAGMA foreign_keys = ON");
     },
   },

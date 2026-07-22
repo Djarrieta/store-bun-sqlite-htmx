@@ -3,13 +3,10 @@
  * Run with `bun run seed`. Product seeding is skipped if products already exist;
  * content and shipping are always seeded idempotently.
  *
- * Scenarios covered:
- *   A — Single product price, sizes inherit (no variant images)
- *   B — Discount + variant price override
- *   C — Product price null, variants with own prices
- *   D — Multi-image per variant (carousel mockup)
- *   E — Out-of-stock variant (hidden from storefront)
- *   F — No price at all (admin-only, not in storefront)
+ * Productos sembrados (cada variante de color lleva su propia imagen, más una
+ * foto grupal del producto):
+ *   1 — Polo Tejido Calado Manga Corta (4 colores)
+ *   2 — Top Tejido sin Mangas (5 colores)
  */
 import { mkdir, readdir, copyFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -80,62 +77,8 @@ async function main(): Promise<void> {
   }
 
   const ropa = categoriesRepo.findByName("Ropa") ?? categoriesRepo.insert("Ropa");
-  const accesorios = categoriesRepo.findByName("Accesorios") ?? categoriesRepo.insert("Accesorios");
 
-  // ── A: Single product price, sizes inherit ──────────────────────────
-  const camiseta = productsRepo.insert(
-    {
-      title: "Camiseta Básica",
-      description:
-        "Camiseta de algodón 100% con cuello redondo y corte regular. Suave, transpirable y versátil.",
-      price_cents: 5_990_000,
-      discount_pct: 0,
-      category_id: ropa.id,
-      tags: ["camiseta", "ropa", "basica", "algodon", "unisex"],
-      active: true,
-    },
-    null,
-  );
-  variantsRepo.insert(camiseta.id, { name: "Talla S", sku: "CAM-S", price_cents: null, stock: 12, low_stock_threshold: 3, active: true });
-  variantsRepo.insert(camiseta.id, { name: "Talla M", sku: "CAM-M", price_cents: null, stock: 20, low_stock_threshold: 3, active: true });
-  variantsRepo.insert(camiseta.id, { name: "Talla L", sku: "CAM-L", price_cents: null, stock: 8, low_stock_threshold: 3, active: true });
-
-  // ── B: Discount + variant price override ────────────────────────────
-  const carcasa = productsRepo.insert(
-    {
-      title: "Carcasa para Celular",
-      description:
-        "Carcasa de silicona flexible con bordes reforzados y acabado mate. Protección diaria.",
-      price_cents: 2_990_000,
-      discount_pct: 10,
-      category_id: accesorios.id,
-      tags: ["carcasa", "celular", "accesorios", "silicona"],
-      active: true,
-    },
-    null,
-  );
-  // iPhone inherits product price (29.900 → 26.910 with 10% off)
-  variantsRepo.insert(carcasa.id, { name: "iPhone 15", sku: "CAR-IP15", price_cents: null, stock: 15, low_stock_threshold: 4, active: true });
-  // Samsung has its own higher price (34.900 → 31.410 with 10% off)
-  variantsRepo.insert(carcasa.id, { name: "Samsung S24", sku: "CAR-S24", price_cents: 3_490_000, stock: 10, low_stock_threshold: 4, active: true });
-
-  // ── C: Product price null, variants with own prices ─────────────────
-  const accesoriosSet = productsRepo.insert(
-    {
-      title: "Set de Accesorios Mix",
-      description: "Conjunto de accesorios para combinar. Cada pieza con precio individual.",
-      price_cents: null,
-      discount_pct: 0,
-      category_id: accesorios.id,
-      tags: ["accesorios", "set", "mix"],
-      active: true,
-    },
-    null,
-  );
-  variantsRepo.insert(accesoriosSet.id, { name: "Collar Dorado", sku: "ACC-COL", price_cents: 4_500_000, stock: 5, low_stock_threshold: 1, active: true });
-  variantsRepo.insert(accesoriosSet.id, { name: "Pulsera Plata", sku: "ACC-PUL", price_cents: 3_200_000, stock: 8, low_stock_threshold: 1, active: true });
-
-  // ── D: Multi-image per variant (carousel mockup) ────────────────────
+  // ── Producto 1: Polo Tejido Calado (imagen por variante) ────────────
   const polo = productsRepo.insert(
     {
       title: "Polo Tejido Calado Manga Corta",
@@ -162,39 +105,37 @@ async function main(): Promise<void> {
   variantsRepo.setImages(poloCafe.id, [{ url: "/uploads/polo-cafe.jpg", alt: "Polo tejido calado café" }]);
   variantsRepo.insert(polo.id, { name: "Crema", sku: "POLO-CRE", price_cents: null, stock: 7, low_stock_threshold: 3, active: true });
 
-  // ── E: Out-of-stock variant (hidden from storefront select/slides) ──
-  const pantalon = productsRepo.insert(
+  // ── Producto 2: Top Tejido sin Mangas (imagen por variante) ─────────
+  const top = productsRepo.insert(
     {
-      title: "Pantalón Estampado Fresas",
+      title: "Top Tejido sin Mangas",
       description:
-        "Pantalón de algodón con estampado de fresas. Corte recto y cómodo, ideal para looks casuales.",
-      price_cents: 8_990_000,
+        "Top tejido sin mangas con cuello redondo y corte entallado. Punto acanalado ligero y fresco, ideal para looks casuales y días cálidos. Disponible en varios colores.",
+      price_cents: 9_900_000,
       discount_pct: 0,
       category_id: ropa.id,
-      tags: ["pantalon", "ropa", "estampado", "fresas", "verano"],
+      tags: ["top", "tejido", "sin mangas", "acanalado", "ropa", "mujer"],
       active: true,
     },
     null,
   );
-  variantsRepo.insert(pantalon.id, { name: "Talla 30", sku: "PAN-30", price_cents: null, stock: 6, low_stock_threshold: 2, active: true });
-  variantsRepo.insert(pantalon.id, { name: "Talla 32", sku: "PAN-32", price_cents: null, stock: 0, low_stock_threshold: 2, active: true });
+  // Foto grupal con todos los colores
+  productsRepo.setImages(top.id, [
+    { url: "/uploads/top-todos.png", alt: "Top tejido sin mangas en todos los colores" },
+  ]);
+  // Cada variante de color con su propia imagen
+  const topLila = variantsRepo.insert(top.id, { name: "Lila", sku: "TOP-LIL", price_cents: null, stock: 9, low_stock_threshold: 3, active: true });
+  variantsRepo.setImages(topLila.id, [{ url: "/uploads/top-lila.png", alt: "Top tejido sin mangas lila" }]);
+  const topTaupe = variantsRepo.insert(top.id, { name: "Taupe", sku: "TOP-TAU", price_cents: null, stock: 7, low_stock_threshold: 3, active: true });
+  variantsRepo.setImages(topTaupe.id, [{ url: "/uploads/top-taupe.png", alt: "Top tejido sin mangas taupe" }]);
+  const topAmarillo = variantsRepo.insert(top.id, { name: "Amarillo", sku: "TOP-AMA", price_cents: null, stock: 6, low_stock_threshold: 3, active: true });
+  variantsRepo.setImages(topAmarillo.id, [{ url: "/uploads/top-amarillo.png", alt: "Top tejido sin mangas amarillo" }]);
+  const topVino = variantsRepo.insert(top.id, { name: "Vino", sku: "TOP-VIN", price_cents: null, stock: 5, low_stock_threshold: 3, active: true });
+  variantsRepo.setImages(topVino.id, [{ url: "/uploads/top-vino.png", alt: "Top tejido sin mangas vino" }]);
+  const topGris = variantsRepo.insert(top.id, { name: "Gris Oscuro", sku: "TOP-GRI", price_cents: null, stock: 8, low_stock_threshold: 3, active: true });
+  variantsRepo.setImages(topGris.id, [{ url: "/uploads/top-gris-oscuro.jpg", alt: "Top tejido sin mangas gris oscuro" }]);
 
-  // ── F: No price at all (admin-only, not in storefront) ──────────────
-  const sinPrecio = productsRepo.insert(
-    {
-      title: "Producto Borrador",
-      description: "Producto sin precio. Solo visible en admin, no aparece en tienda.",
-      price_cents: null,
-      discount_pct: 0,
-      category_id: null,
-      tags: ["borrador"],
-      active: true,
-    },
-    null,
-  );
-  variantsRepo.insert(sinPrecio.id, { name: "Única", sku: null, price_cents: null, stock: 0, low_stock_threshold: 0, active: true });
-
-  console.log("Seed: contenido, envíos, 2 categorías, 6 productos (A–F) y variantes creados.");
+  console.log("Seed: contenido, envíos, 1 categoría, 2 productos y variantes creados.");
 }
 
 main();
