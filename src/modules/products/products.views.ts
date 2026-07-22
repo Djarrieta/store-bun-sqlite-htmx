@@ -9,7 +9,7 @@ import type { Page } from "../../core/repository.ts";
 import type { User } from "../../auth/auth.db.ts";
 import { PRODUCTS_KEY, VARIANTS_KEY, type ProductErrors, type VariantErrors } from "./products.rules.ts";
 import { parseImages, parseTags, effectivePriceCents, type Product, type ProductInput } from "./products.db.ts";
-import { variantsRepo, type Variant } from "../variants/variants.db.ts";
+import { variantsRepo, parseVariantImages, type Variant } from "../variants/variants.db.ts";
 import type { Category } from "../categories/categories.db.ts";
 
 const BASE = "/admin/productos";
@@ -29,7 +29,8 @@ function rowActions(user: User, p: Product): string {
 
 function productMeta(p: Product): string {
   const tags = parseTags(p);
-  const price = formatCop(effectivePriceCents(p.price_cents, p.discount_pct));
+  const eff = effectivePriceCents(p.price_cents, p.discount_pct);
+  const price = eff !== null ? formatCop(eff) : "Sin precio";
   const status = p.active ? "" : ` · <span class="badge badge--warn">inactivo</span>`;
   return `${escapeHtml(price)}${tags.length ? ` · <span class="muted">${escapeHtml(tags.join(", "))}</span>` : ""}${status}`;
 }
@@ -74,7 +75,7 @@ function baseFields(
     ${textField({ name: "title", label: "Título", value: values.title ?? "", required: true, error: errors?.title })}
     ${textareaField({ name: "description", label: "Descripción", value: values.description ?? "" })}
     <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr))">
-      ${textField({ name: "price", label: "Precio (COP)", value: values.priceRaw ?? "", required: true, error: errors?.price, help: "Precio base en pesos." })}
+      ${textField({ name: "price", label: "Precio (COP)", value: values.priceRaw ?? "", required: false, error: errors?.price, help: "Precio base en pesos. Vacío = usar solo precios de variantes. El descuento aplica también a las variantes." })}
       ${textField({ name: "discount_pct", label: "Descuento (%)", type: "number", value: String(values.discount_pct ?? 0), error: errors?.discount })}
     </div>
     ${selectField({
@@ -139,13 +140,54 @@ function variantRow(user: User, productId: string, v: Variant): string {
   const actions = canEdit
     ? `<button class="btn btn--danger btn--sm" hx-post="${BASE}/${productId}/variantes/${v.id}/eliminar" hx-confirm="¿Eliminar variante?" hx-target="#variants-section" hx-swap="outerHTML">Eliminar</button>`
     : "";
-  const meta = `${v.sku ? `<code>${escapeHtml(v.sku)}</code> · ` : ""}Stock: ${v.stock} · ${escapeHtml(price)}${v.active ? "" : " · inactiva"}`;
+  const images = parseVariantImages(v);
+  const thumbs = images.length
+    ? `<div style="display:flex;gap:0.35rem;margin-top:0.4rem;flex-wrap:wrap">${images.slice(0, 3).map((img) => `<img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt ?? "")}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">`).join("")}${images.length > 3 ? `<span class="muted" style="font-size:0.75rem;align-self:center">+${images.length - 3}</span>` : ""}</div>`
+    : "";
+  const meta = `${v.sku ? `<code>${escapeHtml(v.sku)}</code> · ` : ""}Stock: ${v.stock} · ${escapeHtml(price)}${v.active ? "" : " · inactiva"}${thumbs}`;
   return dataRow({ title: v.name, meta, actions });
+}
+
+function variantImagesSection(user: User, product: Product, v: Variant): string {
+  if (!can(user, VARIANTS_KEY, "edit")) return "";
+  const images = parseVariantImages(v);
+  const sectionId = `variant-images-${v.id}`;
+  const thumbs = images.length
+    ? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:0.5rem;margin-top:0.5rem">
+        ${images
+          .map(
+            (img) => `<div class="panel" style="padding:0.35rem">
+              <img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt ?? "")}" style="aspect-ratio:1;object-fit:cover;border-radius:4px;width:100%">
+              <button class="btn btn--danger btn--sm btn--block" style="margin-top:0.35rem;font-size:0.7rem"
+                hx-post="${BASE}/${product.id}/variantes/${v.id}/imagenes/eliminar" hx-vals='${escapeAttr(JSON.stringify({ url: img.url }))}'
+                hx-target="#${sectionId}" hx-swap="outerHTML">Quitar</button>
+            </div>`,
+          )
+          .join("")}
+      </div>`
+    : `<p class="muted" style="font-size:0.8rem;margin:0.4rem 0 0">Sin imágenes.</p>`;
+
+  return `<div id="${sectionId}" style="margin-left:1rem;margin-top:0.5rem;padding:0.5rem;border-left:2px solid var(--border)">
+    <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Imágenes de variante</span>
+    ${thumbs}
+    <form hx-post="${BASE}/${product.id}/variantes/${v.id}/imagenes" hx-encoding="multipart/form-data" hx-target="#${sectionId}" hx-swap="outerHTML" style="margin-top:0.5rem">
+      ${fileField({ name: "image", label: "", accept: "image/jpeg,image/png,image/webp", required: true })}
+      <button type="submit" class="btn btn--outline btn--sm">Subir</button>
+    </form>
+  </div>`;
 }
 
 export function variantsSection(user: User, product: Product, errors?: VariantErrors, values?: Record<string, string>): string {
   const variants = variantsRepo.listByProduct(product.id);
-  const rows = variants.length ? variants.map((v) => variantRow(user, product.id, v)).join("") : `<p class="muted">Sin variantes. Crea al menos una para poder vender el producto.</p>`;
+  const rows = variants.length
+    ? variants
+        .map(
+          (v) =>
+            variantRow(user, product.id, v) +
+            variantImagesSection(user, product, v),
+        )
+        .join("")
+    : `<p class="muted">Sin variantes. Crea al menos una para poder vender el producto.</p>`;
   const addForm = can(user, VARIANTS_KEY, "create")
     ? `<form hx-post="${BASE}/${product.id}/variantes" hx-target="#variants-section" hx-swap="outerHTML" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <h3>Añadir variante</h3>
@@ -177,7 +219,7 @@ export function editProductPage(
   const v = values ?? {
     title: product.title,
     description: product.description,
-    priceRaw: centsToPesos(product.price_cents),
+    priceRaw: product.price_cents !== null ? centsToPesos(product.price_cents) : "",
     discount_pct: product.discount_pct,
     category_id: product.category_id ?? "",
     tags: parseTags(product),

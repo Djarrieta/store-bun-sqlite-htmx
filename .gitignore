@@ -15,12 +15,14 @@ screenshots/*
 # Playwright MCP
 .playwright-mcp/
 
-# OpenCode config
-.opencode/
+# Plans (working docs, not committed)
+plan/
+!plan/.gitkeep
 
 # Secrets
 .env
 .env.local
+deploy/credentials.json
 
 # Logs / OS
 *.log

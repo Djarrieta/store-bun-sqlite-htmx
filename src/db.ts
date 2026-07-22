@@ -10,7 +10,7 @@ mkdirSync(DATA_DIR, { recursive: true });
 
 export const db = new Database(`${DATA_DIR}/app.sqlite`, { create: true });
 
-// PRAGMAs (see tech-spec §17: SQLite en producción).
+// PRAGMAs (see tech-spec §17: SQLite in production).
 db.exec("PRAGMA journal_mode = WAL;");
 db.exec("PRAGMA synchronous = NORMAL;");
 db.exec("PRAGMA busy_timeout = 5000;");

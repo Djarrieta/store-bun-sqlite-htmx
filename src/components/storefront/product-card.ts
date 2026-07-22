@@ -2,19 +2,35 @@
 import { escapeHtml, escapeAttr } from "../../core/http.ts";
 import { formatCop } from "../../core/format.ts";
 import { registerCss } from "../registry.ts";
-import { parseImages, effectivePriceCents, type Product } from "../../modules/products/products.db.ts";
-import type { Variant } from "../../modules/variants/variants.db.ts";
+import { parseImages, resolveUnitPriceCents, resolveBasePriceCents, isSellableOnStorefront, type Product } from "../../modules/products/products.db.ts";
+import { parseVariantImages, type Variant } from "../../modules/variants/variants.db.ts";
 
 registerCss(/* css */ `
-.pcard { display: flex; flex-direction: column; }
-.pcard__media {
+.pcard { display: flex; flex-direction: column; height: 100%; }
+.pcard__carousel {
   position: relative; aspect-ratio: 4 / 5; background: var(--card);
-  border-radius: var(--radius-card); overflow: hidden;
-  display: grid; place-items: center; margin-bottom: 0.9rem;
+  border-radius: var(--radius-card); overflow: hidden; margin: 0 0 0.9rem;
 }
-.pcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-.pcard:hover .pcard__media img { transform: scale(1.045); }
-.pcard__media .ph { color: var(--muted); font-family: var(--font-serif); letter-spacing: 0.24em; font-size: 1.2rem; }
+.pcard__carousel-frame { width: 100%; height: 100%; display: grid; place-items: center; }
+.pcard__carousel-frame img { width: 100%; height: 100%; object-fit: cover; }
+.pcard__carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: grid; place-items: center; cursor: pointer;
+  font-size: 0.8rem; color: var(--fg); opacity: 0.85;
+  transition: opacity 0.15s;
+}
+.pcard__carousel-btn:hover { opacity: 1; }
+.pcard__carousel-btn--prev { left: 0.4rem; }
+.pcard__carousel-btn--next { right: 0.4rem; }
+.pcard__dots { display: flex; justify-content: center; gap: 0.3rem; position: absolute; bottom: 0.5rem; left: 0; right: 0; }
+.pcard__dot {
+  width: 0.4rem; height: 0.4rem; border-radius: 50%;
+  background: var(--border-strong); border: none; padding: 0; cursor: pointer;
+  transition: background 0.15s;
+}
+.pcard__dot--active { background: var(--accent); }
 .pcard__flag {
   position: absolute; top: 0.7rem; left: 0.7rem;
   background: var(--accent); color: var(--accent-foreground);
@@ -27,47 +43,263 @@ registerCss(/* css */ `
 .pcard__price { color: var(--accent); font-weight: 600; margin: 0.2rem 0 0; }
 .pcard__price s { color: var(--muted); font-weight: 400; margin-right: 0.4rem; font-size: 0.85em; }
 .pcard__desc { color: var(--muted); font-size: 0.88rem; margin: 0.4rem 0 0; }
-.pcard__form { margin-top: 0.9rem; }
+.pcard__form { margin-top: auto; }
 .pcard__form .field { margin-bottom: 0.5rem; }
 .pcard__form .field > label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.pcard__detail { display: block; text-align: center; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.6rem; color: var(--muted); }
+.pcard__detail:hover { color: var(--accent); }
 `);
 
-function priceHtml(product: Product): string {
-  const eff = effectivePriceCents(product.price_cents, product.discount_pct);
-  if (product.discount_pct > 0) {
-    return `<span class="pcard__price"><s>${escapeHtml(formatCop(product.price_cents))}</s>${escapeHtml(formatCop(eff))}</span>`;
+// ---- Card slides (carousel model) ----
+
+export interface CardSlide {
+  index: number;
+  url: string;
+  alt: string;
+  /** null = product image (does not force variant selection on navigation) */
+  variantId: string | null;
+}
+
+export function buildCardSlides(
+  product: Product,
+  variants: Variant[],
+): CardSlide[] {
+  if (!isSellableOnStorefront(product, variants)) return [];
+
+  const sellable = variants.filter(
+    (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
+  );
+
+  const slides: CardSlide[] = [];
+  let idx = 0;
+
+  // Product images first
+  const productImages = parseImages(product);
+  if (productImages.length > 0) {
+    for (const img of productImages) {
+      slides.push({ index: idx++, url: img.url, alt: img.alt ?? product.title, variantId: null });
+    }
+  } else {
+    slides.push({ index: idx++, url: "/brand/no-image.jpeg", alt: product.title, variantId: null });
   }
-  return `<span class="pcard__price">${escapeHtml(formatCop(eff))}</span>`;
+
+  // Then variant images (sellable only, in repo order)
+  for (const v of sellable) {
+    const vImages = parseVariantImages(v);
+    for (const img of vImages) {
+      slides.push({ index: idx++, url: img.url, alt: img.alt ?? v.name, variantId: v.id });
+    }
+  }
+
+  return slides;
 }
 
-function media(product: Product): string {
-  const img = parseImages(product)[0];
+export function firstSlideIndexForVariant(slides: CardSlide[], variantId: string): number | null {
+  const slide = slides.find((s) => s.variantId === variantId);
+  return slide ? slide.index : null;
+}
+
+export interface CarouselState {
+  imageIndex: number;
+  selectedVariantId: string | undefined;
+}
+
+/**
+ * Resolves the carousel image index and selected variant consistently for
+ * product cards and product detail.
+ *
+ * Rules (mirroring the detail page behaviour):
+ * - If an image index is explicitly provided, show that image and derive the
+ *   variant from the slide (variant images force their variant selection).
+ * - If only a variant is provided, jump to that variant's first image.
+ * - Otherwise default to the first slide with no variant pre-selected.
+ * - When `autoSelectVariant` is true and no valid variant is selected yet,
+ *   fall back to the first sellable variant (used by cards to keep the "add to
+ *   cart" button usable on first load).
+ */
+export function resolveCarouselState(opts: {
+  slides: CardSlide[];
+  sellable: Variant[];
+  imageIndex?: number;
+  selectedVariantId?: string;
+  autoSelectVariant?: boolean;
+}): CarouselState {
+  const { slides, sellable } = opts;
+  let selectedVariantId =
+    opts.selectedVariantId && sellable.some((v) => v.id === opts.selectedVariantId)
+      ? opts.selectedVariantId
+      : undefined;
+
+  const hasExplicitImageIndex = opts.imageIndex != null;
+  let imageIndex = Math.max(0, Math.min(opts.imageIndex ?? 0, Math.max(slides.length - 1, 0)));
+
+  if (hasExplicitImageIndex && slides.length > 0) {
+    const slide = slides[imageIndex];
+    selectedVariantId = slide?.variantId ?? undefined;
+  } else if (selectedVariantId && slides.length > 0) {
+    const variantIndex = firstSlideIndexForVariant(slides, selectedVariantId);
+    if (variantIndex !== null) imageIndex = variantIndex;
+  }
+
+  if (
+    opts.autoSelectVariant &&
+    (!selectedVariantId || !sellable.some((v) => v.id === selectedVariantId))
+  ) {
+    selectedVariantId = sellable[0]?.id;
+  }
+
+  return { imageIndex, selectedVariantId };
+}
+
+export function cardFragmentUrl(
+  productId: string,
+  opts: { imageIndex?: number; variantId?: string } = {},
+): string {
+  const params = new URLSearchParams();
+  if (opts.imageIndex != null) params.set("imageIndex", String(opts.imageIndex));
+  if (opts.variantId) params.set("variant_id", opts.variantId);
+  const qs = params.toString();
+  return `/productos/${productId}/card${qs ? `?${qs}` : ""}`;
+}
+
+export type CarouselUrlBuilder = (
+  productId: string,
+  opts: { imageIndex?: number; variantId?: string },
+) => string;
+
+export function productCarousel(opts: {
+  productId: string;
+  slides: CardSlide[];
+  currentIndex: number;
+  selectedVariantId?: string;
+  target?: string;
+  buildUrl?: CarouselUrlBuilder;
+}): string {
+  const { productId, slides, currentIndex } = opts;
+  if (slides.length === 0) return "";
+  const i = Math.max(0, Math.min(currentIndex, slides.length - 1));
+  const slide = slides[i]!;
+  const baseParams: Record<string, string> = {};
+  if (opts.selectedVariantId) baseParams.variantId = opts.selectedVariantId;
+
+  const prevIdx = i > 0 ? i - 1 : slides.length - 1;
+  const nextIdx = i < slides.length - 1 ? i + 1 : 0;
+  const target = escapeAttr(opts.target ?? "closest .pcard");
+  const buildUrl = opts.buildUrl ?? cardFragmentUrl;
+
+  const flag = ""; // Flag rendered outside carousel by caller
+
+  const arrows =
+    slides.length > 1
+      ? `<button type="button" class="pcard__carousel-btn pcard__carousel-btn--prev"
+          hx-get="${escapeAttr(buildUrl(productId, { ...baseParams, imageIndex: prevIdx }))}"
+          hx-target="${target}" hx-swap="outerHTML"
+          aria-label="Imagen anterior">‹</button>
+        <button type="button" class="pcard__carousel-btn pcard__carousel-btn--next"
+          hx-get="${escapeAttr(buildUrl(productId, { ...baseParams, imageIndex: nextIdx }))}"
+          hx-target="${target}" hx-swap="outerHTML"
+          aria-label="Imagen siguiente">›</button>`
+      : "";
+
+  const dots =
+    slides.length > 1
+      ? `<div class="pcard__dots">${slides
+          .map(
+            (s) =>
+              `<button type="button" class="pcard__dot${s.index === i ? " pcard__dot--active" : ""}"
+                hx-get="${escapeAttr(buildUrl(productId, { ...baseParams, imageIndex: s.index }))}"
+                hx-target="${target}" hx-swap="outerHTML"
+                aria-label="Imagen ${s.index + 1}"></button>`,
+          )
+          .join("")}</div>`
+      : "";
+
+  return `<figure class="pcard__carousel" data-index="${i}">
+    <div class="pcard__carousel-frame">
+      <img src="${escapeAttr(slide.url)}" alt="${escapeAttr(slide.alt)}" loading="lazy">
+    </div>
+    ${flag}${arrows}${dots}
+  </figure>`;
+}
+
+function priceHtml(product: Product, selected: Variant | undefined): string {
+  const unit = resolveUnitPriceCents(product, selected);
+  if (unit === null) return `<span class="pcard__price muted">Sin precio</span>`;
+  const base = resolveBasePriceCents(product, selected);
+  if (product.discount_pct > 0 && base !== null) {
+    return `<span class="pcard__price"><s>${escapeHtml(formatCop(base))}</s>${escapeHtml(formatCop(unit))}</span>`;
+  }
+  return `<span class="pcard__price">${escapeHtml(formatCop(unit))}</span>`;
+}
+
+export function productCard(
+  product: Product,
+  variants: Variant[],
+  opts?: { imageIndex?: number; selectedVariantId?: string },
+): string | null {
+  const slides = buildCardSlides(product, variants);
+  if (slides.length === 0) return null;
+
+  const sellable = variants.filter(
+    (v) => v.active === 1 && v.stock > 0 && resolveBasePriceCents(product, v) !== null,
+  );
+
+  const singleVariant = sellable.length === 1;
+  const { imageIndex, selectedVariantId } = resolveCarouselState({
+    slides,
+    sellable,
+    imageIndex: opts?.imageIndex,
+    selectedVariantId: opts?.selectedVariantId,
+    autoSelectVariant: singleVariant,
+  });
+
+  const selected = selectedVariantId ? sellable.find((v) => v.id === selectedVariantId) : undefined;
+
   const flag = product.discount_pct > 0 ? `<span class="pcard__flag">−${product.discount_pct}%</span>` : "";
-  const inner = img
-    ? `<img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt ?? product.title)}" loading="lazy">`
-    : `<span class="ph">CRISTA</span>`;
-  return `<a class="pcard__media" href="/productos/${escapeAttr(product.id)}">${inner}${flag}</a>`;
-}
 
-export function productCard(product: Product, variants: Variant[]): string {
-  const inStock = variants.filter((v) => v.stock > 0);
-  const addForm = inStock.length
-    ? `<form class="pcard__form" hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML">
-        <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
-        <div class="field">
-          <label>Talla / variante</label>
-          <select class="select" name="variant_id" required>
-            ${inStock.map((v) => `<option value="${escapeAttr(v.id)}">${escapeHtml(v.name)}</option>`).join("")}
+  const carousel = productCarousel({
+    productId: product.id,
+    slides,
+    currentIndex: imageIndex,
+    selectedVariantId,
+    target: "closest .pcard",
+  });
+
+  // Variant selector
+  const selector =
+    sellable.length === 0
+      ? ""
+      : singleVariant
+        ? `<input type="hidden" name="variant_id" value="${escapeAttr(sellable[0]!.id)}">`
+        : `<div class="field">
+          <label>Variante</label>
+          <select class="select" name="variant_id"
+            hx-get="${escapeAttr(cardFragmentUrl(product.id))}"
+            hx-target="closest .pcard" hx-swap="outerHTML" hx-trigger="change"
+            hx-include="this">
+            <option value=""${!selectedVariantId ? " selected" : ""}>Selecciona</option>
+            ${sellable.map((v) => `<option value="${escapeAttr(v.id)}"${v.id === selectedVariantId ? " selected" : ""}>${escapeHtml(v.name)}</option>`).join("")}
           </select>
-        </div>
-        <button type="submit" class="btn btn--outline btn--block">Agregar al carrito</button>
-      </form>`
-    : `<div class="pcard__form"><button class="btn btn--outline btn--block" disabled aria-disabled="true">Agotado</button></div>`;
+        </div>`;
+
+  // Add to cart form
+  const addForm =
+    sellable.length > 0
+      ? `<form class="pcard__form" hx-post="/carrito/agregar" hx-target="#cart-badge" hx-swap="outerHTML">
+          <input type="hidden" name="product_id" value="${escapeAttr(product.id)}">
+          ${selector}
+          <button type="submit" class="btn btn--outline btn--block"${!selectedVariantId ? " disabled aria-disabled='true'" : ""}>Agregar al carrito</button>
+        </form>`
+      : `<div class="pcard__form"><button class="btn btn--outline btn--block" disabled aria-disabled="true">Agotado</button></div>`;
 
   return `<article class="pcard">
-    ${media(product)}
+    <div style="position:relative">
+      ${carousel}
+      ${flag}
+    </div>
     <h3 class="pcard__title"><a href="/productos/${escapeAttr(product.id)}">${escapeHtml(product.title)}</a></h3>
-    ${priceHtml(product)}
+    ${priceHtml(product, selected)}
     ${addForm}
+    <a class="pcard__detail" href="/productos/${escapeAttr(product.id)}">Ver detalle →</a>
   </article>`;
 }

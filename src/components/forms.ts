@@ -1,6 +1,7 @@
 /**
  * Form field components. All inputs use theme classes; values are escaped.
- * CSRF token field is included via `csrfField()` (tech-spec §16).
+ * CSRF tokens are a future improvement; v1 relies on SameSite=Lax cookies and
+ * POST-redirect patterns (see docs/security.md and docs/tech-spec/15-security.md).
  */
 import { escapeHtml, escapeAttr } from "../core/http.ts";
 

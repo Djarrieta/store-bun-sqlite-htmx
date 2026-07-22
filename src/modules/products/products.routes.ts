@@ -5,7 +5,7 @@ import { requirePermission } from "../../auth/index.ts";
 import { saveImage } from "../../core/uploads.ts";
 import { productsRepo, parseImages, type Product } from "./products.db.ts";
 import { categoriesRepo } from "../categories/categories.db.ts";
-import { variantsRepo } from "../variants/variants.db.ts";
+import { variantsRepo, parseVariantImages } from "../variants/variants.db.ts";
 import { PRODUCTS_KEY, VARIANTS_KEY, validateProduct, validateVariant } from "./products.rules.ts";
 import {
   productsListPage,
@@ -49,6 +49,14 @@ export function registerProductsRoutes(router: Router): void {
       return html(newProductPage(user, categoriesRepo.listAll(), { ...data, priceRaw }, errors), { status: 400 });
     }
     const product = productsRepo.insert(data, user.id);
+    variantsRepo.insert(product.id, {
+      name: "Única",
+      sku: null,
+      price_cents: null,
+      stock: 0,
+      low_stock_threshold: 0,
+      active: true,
+    });
     return redirect(`${BASE}/${product.id}/editar`);
   });
 
@@ -135,7 +143,48 @@ export function registerProductsRoutes(router: Router): void {
     if (user instanceof Response) return user;
     const product = productsRepo.findById(ctx.params.id!);
     if (!product) return notFound("Producto no encontrado.");
+    const allVariants = variantsRepo.listByProduct(product.id);
+    if (allVariants.length <= 1) {
+      return fragment(
+        variantsSection(user, product, { name: "Debe existir al menos una variante." }),
+      );
+    }
     variantsRepo.deleteById(ctx.params.vid!);
+    return fragment(variantsSection(user, product));
+  });
+
+  // ---- Variant images ----
+  router.post(`${BASE}/:id/variantes/:vid/imagenes`, async (ctx) => {
+    const user = requirePermission(ctx, VARIANTS_KEY, "edit");
+    if (user instanceof Response) return user;
+    const product = productsRepo.findById(ctx.params.id!);
+    if (!product) return notFound("Producto no encontrado.");
+    const variant = variantsRepo.findById(ctx.params.vid!);
+    if (!variant || variant.product_id !== product.id) return notFound("Variante no encontrada.");
+    const form = await ctx.req.formData();
+    const file = form.get("image");
+    if (!(file instanceof File)) return badRequest("No se recibió imagen.");
+    const result = await saveImage(file, UPLOAD_DIR);
+    if (!result.ok) {
+      return fragment(variantsSection(user, product).replace("<h2>Variantes</h2>", `<h2>Variantes</h2><div class="alert alert--error">${result.error}</div>`));
+    }
+    const images = parseVariantImages(variant);
+    images.push({ url: `/uploads/${result.filename}`, alt: variant.name });
+    variantsRepo.setImages(variant.id, images);
+    return fragment(variantsSection(user, product));
+  });
+
+  router.post(`${BASE}/:id/variantes/:vid/imagenes/eliminar`, async (ctx) => {
+    const user = requirePermission(ctx, VARIANTS_KEY, "edit");
+    if (user instanceof Response) return user;
+    const product = productsRepo.findById(ctx.params.id!);
+    if (!product) return notFound("Producto no encontrado.");
+    const variant = variantsRepo.findById(ctx.params.vid!);
+    if (!variant || variant.product_id !== product.id) return notFound("Variante no encontrada.");
+    const form = await ctx.req.formData();
+    const url = String(form.get("url") ?? "");
+    const images = parseVariantImages(variant).filter((img) => img.url !== url);
+    variantsRepo.setImages(variant.id, images);
     return fragment(variantsSection(user, product));
   });
 }

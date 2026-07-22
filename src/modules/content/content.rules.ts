@@ -1,6 +1,5 @@
 /** Content permissions + curated editable keys (tech-spec §12). */
 import { registerPermissions, type PermissionMatrix } from "../../core/permissions.ts";
-import { contentRepo } from "./content.db.ts";
 
 export const CONTENT_KEY = "content";
 
@@ -35,10 +34,10 @@ export const CONTENT_FIELDS: ContentField[] = [
   },
   {
     key: "hero_image",
-    label: "Imagen del hero",
+    label: "Imagen principal",
     type: "image_url",
-    default: "/brand/hero.png",
-    help: "URL relativa de la imagen principal del home (ej. /brand/hero.png).",
+    default: "/uploads/hero.png",
+    help: "URL relativa de la imagen principal del home (ej. /uploads/hero.png).",
   },
 ];
 

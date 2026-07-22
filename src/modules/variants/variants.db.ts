@@ -1,6 +1,7 @@
 /** Variants (sellable SKUs) table + repository (tech-spec §7). */
 import { db } from "../../db.ts";
 import { Repository } from "../../core/repository.ts";
+import type { ProductImage } from "../products/products.db.ts";
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS variants (
@@ -12,7 +13,8 @@ CREATE TABLE IF NOT EXISTS variants (
   price_cents    INTEGER,
   stock          INTEGER NOT NULL DEFAULT 0,
   low_stock_threshold INTEGER NOT NULL DEFAULT 0,
-  active         INTEGER NOT NULL DEFAULT 1
+  active         INTEGER NOT NULL DEFAULT 1,
+  images         TEXT NOT NULL DEFAULT '[]'
 );
 CREATE INDEX IF NOT EXISTS idx_variants_product ON variants(product_id);
 `);
@@ -27,6 +29,7 @@ export interface Variant {
   stock: number;
   low_stock_threshold: number;
   active: number;
+  images: string;
 }
 
 export interface VariantInput {
@@ -44,6 +47,15 @@ export function parseAttributes(variant: Variant): Record<string, string> {
     return v && typeof v === "object" ? (v as Record<string, string>) : {};
   } catch {
     return {};
+  }
+}
+
+export function parseVariantImages(variant: Variant): ProductImage[] {
+  try {
+    const v = JSON.parse(variant.images);
+    return Array.isArray(v) ? (v as ProductImage[]) : [];
+  } catch {
+    return [];
   }
 }
 
@@ -86,10 +98,11 @@ class VariantsRepository extends Repository<Variant & Record<string, unknown>> {
       stock: input.stock,
       low_stock_threshold: input.low_stock_threshold,
       active: input.active ? 1 : 0,
+      images: "[]",
     };
     this.run(
-      `INSERT INTO variants (id, product_id, sku, name, attributes, price_cents, stock, low_stock_threshold, active)
-       VALUES ($id, $product_id, $sku, $name, $attributes, $price_cents, $stock, $low, $active)`,
+      `INSERT INTO variants (id, product_id, sku, name, attributes, price_cents, stock, low_stock_threshold, active, images)
+       VALUES ($id, $product_id, $sku, $name, $attributes, $price_cents, $stock, $low, $active, $images)`,
       {
         $id: variant.id,
         $product_id: productId,
@@ -100,6 +113,7 @@ class VariantsRepository extends Repository<Variant & Record<string, unknown>> {
         $stock: variant.stock,
         $low: variant.low_stock_threshold,
         $active: variant.active,
+        $images: variant.images,
       },
     );
     return variant;
@@ -126,6 +140,13 @@ class VariantsRepository extends Repository<Variant & Record<string, unknown>> {
       { $sku: sku, $id: exceptId ?? "" },
     );
     return (row?.n ?? 0) > 0;
+  }
+
+  setImages(id: string, images: ProductImage[]): void {
+    this.run(`UPDATE variants SET images = $images WHERE id = $id`, {
+      $id: id,
+      $images: JSON.stringify(images),
+    });
   }
 }
 

@@ -42,12 +42,34 @@ export const config = {
   },
   adminAllowlist: list("ADMIN_ALLOWLIST"),
 
-  // LLM (DeepSeek, OpenAI-compatible; provider swappable)
-  llm: {
-    apiKey: str("DEEPSEEK_API_KEY"),
-    model: str("DEEPSEEK_MODEL", "deepseek-chat"),
-    baseUrl: str("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-  },
+  // LLM (swappable provider: deepseek | openai | ollama)
+  llm: (() => {
+    const provider = str("LLM_PROVIDER", "deepseek");
+    const defaults: Record<string, { apiKey: string; model: string; baseUrl: string }> = {
+      deepseek: {
+        apiKey: str("DEEPSEEK_API_KEY"),
+        model: str("DEEPSEEK_MODEL", "deepseek-chat"),
+        baseUrl: str("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+      },
+      openai: {
+        apiKey: str("OPENAI_API_KEY"),
+        model: str("OPENAI_MODEL", "gpt-4o-mini"),
+        baseUrl: str("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+      },
+      ollama: {
+        apiKey: str("OLLAMA_API_KEY", "ollama"),
+        model: str("OLLAMA_MODEL", "llama3.1"),
+        baseUrl: str("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+      },
+    };
+    const d = (defaults[provider] ?? defaults.deepseek)!;
+    return {
+      provider: provider as "deepseek" | "openai" | "ollama",
+      apiKey: str("LLM_API_KEY") || d.apiKey,
+      model: str("LLM_MODEL") || d.model,
+      baseUrl: str("LLM_BASE_URL") || d.baseUrl,
+    };
+  })(),
 
   // Payments (v1 Nequi manual)
   nequi: {

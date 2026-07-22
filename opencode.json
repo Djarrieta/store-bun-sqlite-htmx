@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "docs/modules.md",
+    "docs/seeding.md",
+    "docs/deployment.md",
+    "docs/auth.md",
+    "docs/chat.md",
+    "docs/payments.md",
+    "docs/schema.md",
+    "docs/security.md",
+    "docs/storefront.md",
+    "docs/ui-theming.md",
+    "docs/tech-spec/index.md"
+  ]
+}

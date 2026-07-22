@@ -25,6 +25,22 @@ export const MIGRATIONS: Migration[] = [
       // No-op: tables/views are created by module db files on import.
     },
   },
+  {
+    version: 2,
+    name: "drop-category-slug",
+    up: (database) => {
+      const cols = database.query("PRAGMA table_info(categories)").all() as { name: string }[];
+      if (cols.some((c) => c.name === "slug")) {
+        database.exec("ALTER TABLE categories DROP COLUMN slug");
+      }
+      const hasUnique = database
+        .query(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='categories' AND "unique"=1 AND sql LIKE '%name%'`)
+        .get();
+      if (!hasUnique) {
+        database.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name ON categories(name)");
+      }
+    },
+  },
 ];
 
 function currentVersion(): number {

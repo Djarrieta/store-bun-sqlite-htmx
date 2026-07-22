@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS products (
   id           TEXT PRIMARY KEY,
   title        TEXT NOT NULL,
   description  TEXT NOT NULL DEFAULT '',
-  price_cents  INTEGER NOT NULL DEFAULT 0,
+  price_cents  INTEGER,
   discount_pct INTEGER NOT NULL DEFAULT 0,
   category_id  TEXT REFERENCES categories(id),
   tags         TEXT NOT NULL DEFAULT '[]',
@@ -30,7 +30,7 @@ export interface Product {
   id: string;
   title: string;
   description: string;
-  price_cents: number;
+  price_cents: number | null;
   discount_pct: number;
   category_id: string | null;
   tags: string;
@@ -45,7 +45,7 @@ export interface Product {
 export interface ProductInput {
   title: string;
   description: string;
-  price_cents: number;
+  price_cents: number | null;
   discount_pct: number;
   category_id: string | null;
   tags: string[];
@@ -71,9 +71,44 @@ export function parseImages(product: Product): ProductImage[] {
 }
 
 /** Effective unit price in cents after the product-level discount. */
-export function effectivePriceCents(basePriceCents: number, discountPct: number): number {
+export function effectivePriceCents(basePriceCents: number | null, discountPct: number): number | null {
+  if (basePriceCents === null) return null;
   const pct = Math.max(0, Math.min(100, discountPct));
   return Math.round(basePriceCents * (1 - pct / 100));
+}
+
+/** Resolves the base price: variant override wins, then product price. */
+export function resolveBasePriceCents(
+  product: Pick<Product, "price_cents">,
+  variant?: { price_cents: number | null } | null,
+): number | null {
+  if (variant && variant.price_cents !== null) return variant.price_cents;
+  return product.price_cents;
+}
+
+/** Unit price after resolving base (variant→product) and applying discount. */
+export function resolveUnitPriceCents(
+  product: Pick<Product, "price_cents" | "discount_pct">,
+  variant?: { price_cents: number | null } | null,
+): number | null {
+  return effectivePriceCents(resolveBasePriceCents(product, variant), product.discount_pct);
+}
+
+/**
+ * Whether the product is sellable on the storefront:
+ * active + at least one active variant with stock > 0 and a resolvable base price.
+ */
+export function isSellableOnStorefront(
+  product: Product,
+  variants: { active: number; stock: number; price_cents: number | null }[],
+): boolean {
+  if (product.active !== 1) return false;
+  return variants.some(
+    (v) =>
+      v.active === 1 &&
+      v.stock > 0 &&
+      resolveBasePriceCents(product, v) !== null,
+  );
 }
 
 class ProductsRepository extends Repository<Product & Record<string, unknown>> {

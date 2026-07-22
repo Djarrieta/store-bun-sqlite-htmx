@@ -13,7 +13,7 @@ export const ordersPermissions: PermissionMatrix = {
 registerPermissions(ORDERS_KEY, ordersPermissions);
 
 /** Statuses an admin may set manually (post-payment lifecycle). */
-export const MANUAL_STATUSES: OrderStatus[] = ["paid", "preparing", "shipped", "delivered", "cancelled", "refunded"];
+export const MANUAL_STATUSES: OrderStatus[] = ["preparing", "shipped", "delivered", "cancelled", "refunded"];
 
 export const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: "", label: "Todos" },
@@ -29,4 +29,10 @@ export const STATUS_FILTERS: { value: string; label: string }[] = [
 
 export function isManualStatus(value: string): value is OrderStatus {
   return (MANUAL_STATUSES as string[]).includes(value);
+}
+
+const STATUS_LABEL_MAP = Object.fromEntries(STATUS_FILTERS.map((f) => [f.value, f.label]));
+
+export function statusLabel(status: string): string {
+  return STATUS_LABEL_MAP[status] ?? status;
 }

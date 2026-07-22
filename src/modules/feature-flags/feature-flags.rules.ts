@@ -24,10 +24,6 @@ export const FLAGS: FlagDef[] = [
   { key: "whatsapp", label: "WhatsApp", description: "Habilita el webhook de WhatsApp.", default: false },
 ];
 
-export function ensureFlagDefaults(): void {
-  for (const f of FLAGS) flagsRepo.ensureFlag(f.key, f.default);
-}
-
 export function flagEnabled(key: string): boolean {
   return flagsRepo.isEnabled(key);
 }

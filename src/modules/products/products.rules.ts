@@ -69,7 +69,7 @@ export function validateProduct(
     data: {
       title,
       description,
-      price_cents: Number.isNaN(price_cents) ? 0 : price_cents,
+      price_cents: priceRaw === "" || Number.isNaN(price_cents) ? null : price_cents,
       discount_pct: Math.max(0, Math.min(100, discount_pct)),
       category_id,
       tags,

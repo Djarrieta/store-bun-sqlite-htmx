@@ -138,7 +138,7 @@ export function upsertOAuthUser(params: {
   const identity = oauthRepo.findByProviderSubject(params.provider, params.subject);
   if (identity) {
     const user = usersRepo.findById(identity.user_id) as User;
-    // Actualizar nombre/avatar desde el proveedor en cada login.
+    // Update name/avatar from the provider on each login.
     usersRepo.updateProfile(
       user.id,
       params.displayName ?? user.display_name,

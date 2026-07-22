@@ -16,7 +16,7 @@ import "./auth/auth.db.ts";
 import { resolveUser, purgeExpiredSessions, SESSION_COOKIE } from "./auth/auth.service.ts";
 import { registerAuthRoutes } from "./auth/auth.routes.ts";
 import { registerGoogleOAuthRoutes } from "./auth/oauth.google.ts";
-import { requireStaff } from "./auth/index.ts";
+import { requireAdmin } from "./auth/index.ts";
 
 // Storefront + admin dashboard.
 import { registerHomeRoutes } from "./storefront/home.routes.ts";
@@ -49,7 +49,7 @@ registerChatWebRoutes(router);
 registerChatApiRoutes(router);
 registerWhatsappRoutes(router);
 router.get("/admin", (ctx) => {
-  const user = requireStaff(ctx);
+  const user = requireAdmin(ctx);
   if (user instanceof Response) return user;
   return html(adminDashboard(user));
 });

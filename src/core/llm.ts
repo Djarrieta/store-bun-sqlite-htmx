@@ -1,7 +1,7 @@
 /**
- * LLM abstraction (tech-spec §S2, §14.3). The CORE does not depend on DeepSeek:
- * it talks to any OpenAI-compatible Chat Completions endpoint over fetch. Swap the
- * provider via env (DEEPSEEK_* today). No SDK dependency.
+ * LLM abstraction (tech-spec §S2, §14.3). Provider swappable via env
+ * (LLM_PROVIDER: deepseek | openai | ollama). Talks OpenAI-compatible
+ * Chat Completions over fetch. No SDK dependency.
  */
 import { config, llmEnabled } from "../config.ts";
 
@@ -60,12 +60,14 @@ export async function chatComplete(messages: LlmMessage[], tools?: LlmToolSpec[]
     body.tool_choice = "auto";
   }
 
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (config.llm.apiKey) {
+    headers.authorization = `Bearer ${config.llm.apiKey}`;
+  }
+
   const res = await fetch(`${config.llm.baseUrl}/chat/completions`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${config.llm.apiKey}`,
-    },
+    headers,
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(30_000),
   });

@@ -35,9 +35,8 @@ export function registerCategoriesRoutes(router: Router): void {
     if (user instanceof Response) return user;
     const form = await ctx.req.formData();
     const { data, errors } = validateCategory(form);
-    if (!errors.slug && categoriesRepo.slugExists(data.slug)) errors.slug = "Ese slug ya existe.";
-    if (errors.name || errors.slug) return html(categoryFormPage(user, { values: data, errors }), { status: 400 });
-    categoriesRepo.insert(data.name, data.slug);
+    if (errors.name) return html(categoryFormPage(user, { values: data, errors }), { status: 400 });
+    categoriesRepo.insert(data.name);
     return redirect(BASE);
   });
 
@@ -56,10 +55,9 @@ export function registerCategoriesRoutes(router: Router): void {
     if (!cat) return notFound("Categoría no encontrada.");
     const form = await ctx.req.formData();
     const { data, errors } = validateCategory(form);
-    if (!errors.slug && categoriesRepo.slugExists(data.slug, cat.id)) errors.slug = "Ese slug ya existe.";
-    if (errors.name || errors.slug)
+    if (errors.name)
       return html(categoryFormPage(user, { category: cat, values: data, errors }), { status: 400 });
-    categoriesRepo.update(cat.id, data.name, data.slug);
+    categoriesRepo.update(cat.id, data.name);
     return redirect(BASE);
   });
 
