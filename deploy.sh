@@ -13,9 +13,10 @@
 #                                           main -> tag vX.Y.Z -> push -> merge-back
 #                                           to dev. Does not touch the prod container.
 #
-# Versioned migrations (PRAGMA user_version) run automatically on startup,
-# BEFORE serving traffic (src/migrations/). For continuous backups
-# Litestream is recommended (replica to R2/S3).
+# The schema is created idempotently at startup via CREATE TABLE IF NOT EXISTS.
+# Versioned migrations are deferred until v1.0 — while pre-1.0 the database is
+# disposable (reset with `bun run reset` + `bun run seed`). For continuous
+# backups Litestream is recommended (replica to R2/S3).
 
 set -euo pipefail
 cd "$(dirname "$0")"

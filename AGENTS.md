@@ -15,7 +15,7 @@ Online store + admin panel + multichannel AI chat. Stack: **Bun + SQLite (`bun:s
 | [docs/auth.md](docs/auth.md) | Touching users, sessions, OAuth, roles, or permissions. |
 | [docs/chat.md](docs/chat.md) | Working on the AI assistant, WhatsApp, or payment proof via chat. |
 | [docs/payments.md](docs/payments.md) | Working on checkout, orders, Nequi proof, or future Wompi. |
-| [docs/schema.md](docs/schema.md) | Adding tables, columns, FKs, or migrations. |
+| [docs/schema.md](docs/schema.md) | Adding or changing tables, columns, or FKs. |
 | [docs/security.md](docs/security.md) | Any change that touches auth, SQL, uploads, payments, or chat. |
 | [docs/storefront.md](docs/storefront.md) | Public store pages, catalog, cart, or checkout. |
 | [docs/ui-theming.md](docs/ui-theming.md) | New UI components or design tokens. |

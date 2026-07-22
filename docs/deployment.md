@@ -35,7 +35,7 @@ main (clean history: 1 commit per release, 1 tag per version)
   │    4. docker compose up -d --build
   │    5. health check on http://127.0.0.1:4010
   ▼
-updated service (migrations run on boot before serving traffic — src/migrations/)
+updated service (schema auto-created at boot via CREATE TABLE IF NOT EXISTS)
 ```
 
 ## `deploy.sh` reference
@@ -79,8 +79,8 @@ at the end (`git describe --tags`).
 
 `./deploy.sh` copies `data/app.sqlite` to
 `data/backups/app-YYYYMMDD-HHMMSS.sqlite` **before every deploy**, keeping only
-the **last 3** (deletes older ones). This is a defense against destructive
-migrations or corruption detected right after a deploy.
+the **last 3** (deletes older ones). This is a defense against corruption or a
+bad deploy detected right after release.
 
 ### Restore a backup
 
@@ -124,7 +124,7 @@ git push origin main
 ./deploy.sh
 ```
 
-### Database (after a bad migration)
+### Database (after a bad deploy)
 
 Restore the pre-deploy backup as described in **Backups → Restore**, then
 revert the code to the version compatible with that schema.

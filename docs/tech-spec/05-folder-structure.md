@@ -3,7 +3,7 @@
 ```
 store-bun-sqlite-htmx/
   src/
-    index.ts                       # entry point: auth → modules → routes → migrations → server
+    index.ts                       # entry point: auth → modules → routes → server
     config.ts                      # env var loading
     db.ts                          # bun:sqlite connection, PRAGMAs, newId(), now()
     core/
@@ -52,7 +52,7 @@ store-bun-sqlite-htmx/
     integrations/
       whatsapp/                    # webhook + Graph API send
       wompi/                       # (future) payment gateway
-    migrations/
+    migrations/                    # (v1.0+) versioned schema migrations
     scripts/
       seed.ts                      # single source of initial data
       reset.ts                     # reset DB

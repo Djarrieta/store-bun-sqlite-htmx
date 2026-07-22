@@ -9,7 +9,6 @@ import { newId } from "./db.ts";
 import { Router, type RouteContext, type HttpMethod } from "./core/router.ts";
 import { parseCookies, serializeCookie, notFound, serverError, html } from "./core/http.ts";
 import { registerAllRoutes } from "./core/modules.ts";
-import { runMigrations } from "./migrations/index.ts";
 
 // Auth subsystem (side-effect: create tables).
 import "./auth/auth.db.ts";
@@ -55,7 +54,6 @@ router.get("/admin", (ctx) => {
 });
 registerAllRoutes(router);
 
-runMigrations();
 purgeExpiredSessions();
 
 // ---- Static assets ----

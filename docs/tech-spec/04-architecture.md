@@ -7,7 +7,7 @@
 - Initialize auth provider (Google client).
 - Register auth routes (login, callback, logout, password reset, register).
 - Register module routes and API endpoints.
-- Apply migrations (on startup) and optional seed in dev.
+- Create tables idempotently on startup (`CREATE TABLE IF NOT EXISTS`); optional seed in dev. Versioned migrations deferred to v1.0.
 - Serve static assets and public files.
 
 ## Client

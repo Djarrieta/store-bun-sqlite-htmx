@@ -54,9 +54,11 @@ Natural-key exceptions (never exposed as sequential IDs):
 
 ### Production
 
-- Use versioned migrations in `src/migrations/NN_*.ts`.
-- Applied at startup in order using `PRAGMA user_version`.
-- Migrations run before serving traffic.
+- Pre-1.0 the database is **disposable**: same `CREATE TABLE IF NOT EXISTS`
+  strategy, reset freely with `bun run reset` + `bun run seed`.
+- Versioned migrations (`src/migrations/NN_*.ts` applied in order via
+  `PRAGMA user_version`) are **deferred until v1.0**, when real data must be
+  preserved.
 
 ## Tables
 
@@ -279,4 +281,4 @@ PRAGMA foreign_keys=ON;
 
 - `src/db.ts` — shared connection + PRAGMAs + `newId()` / `now()`.
 - `src/modules/<n>/<n>.db.ts` — per-module table + repository.
-- `src/migrations/NN_*.ts` — production migrations.
+- `src/migrations/NN_*.ts` — versioned migrations (v1.0+, not present yet).
