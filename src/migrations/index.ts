@@ -30,15 +30,29 @@ export const MIGRATIONS: Migration[] = [
     name: "drop-category-slug",
     up: (database) => {
       const cols = database.query("PRAGMA table_info(categories)").all() as { name: string }[];
-      if (cols.some((c) => c.name === "slug")) {
-        database.exec("ALTER TABLE categories DROP COLUMN slug");
+      if (!cols.some((c) => c.name === "slug")) {
+        // slug already removed — just ensure the unique index exists
+        const hasUnique = database
+          .query(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='categories' AND "unique"=1 AND sql LIKE '%name%'`)
+          .get();
+        if (!hasUnique) {
+          database.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name ON categories(name)");
+        }
+        return;
       }
-      const hasUnique = database
-        .query(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='categories' AND "unique"=1 AND sql LIKE '%name%'`)
-        .get();
-      if (!hasUnique) {
-        database.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name ON categories(name)");
-      }
+      // SQLite can't DROP COLUMN a UNIQUE column; recreate the table.
+      database.exec(`
+        CREATE TABLE categories_new (
+          id          TEXT PRIMARY KEY,
+          name        TEXT NOT NULL,
+          name_search TEXT NOT NULL DEFAULT ''
+        );
+        INSERT INTO categories_new (id, name, name_search)
+          SELECT id, name, name_search FROM categories;
+        DROP TABLE categories;
+        ALTER TABLE categories_new RENAME TO categories;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
+      `);
     },
   },
 ];
