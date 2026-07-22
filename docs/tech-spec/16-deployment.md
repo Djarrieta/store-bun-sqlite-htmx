@@ -32,7 +32,8 @@ main
     5. health check on http://127.0.0.1:4010
 ```
 
-Migrations run on boot before serving traffic (`src/migrations/`).
+Schema is created on boot via `CREATE TABLE IF NOT EXISTS`. Versioned migrations
+are deferred to v1.0.
 
 ## Rollback
 
@@ -42,7 +43,12 @@ Revert the release commit on `main` and redeploy (`git revert --no-edit HEAD`).
 ### Database
 Restore the pre-deploy backup, then revert code to the compatible version.
 
-## Versioned migrations
+## Versioned migrations (v1.0+)
+
+Deferred until v1.0. While pre-1.0 the database is disposable: change the schema
+directly in each `<n>.db.ts` and reset with `bun run reset` + `bun run seed`.
+
+From v1.0, when real data must be preserved:
 
 - Managed via `PRAGMA user_version`.
 - Each migration increments the version number.

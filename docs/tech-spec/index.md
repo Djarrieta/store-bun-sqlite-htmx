@@ -36,7 +36,7 @@ This is the **design source of truth**. Read the relevant section before impleme
 | Task | Start here |
 |------|------------|
 | Add a new module | [06-modules.md](06-modules.md) |
-| Add/migrate a table | [07-data-model.md](07-data-model.md) |
+| Add or change a table | [07-data-model.md](07-data-model.md) |
 | Work on public pages | [08-public-storefront.md](08-public-storefront.md) |
 | Work on checkout/payments | [09-cart-checkout.md](09-cart-checkout.md), [10-payments.md](10-payments.md) |
 | Work on admin panel | [11-admin-panel.md](11-admin-panel.md) |

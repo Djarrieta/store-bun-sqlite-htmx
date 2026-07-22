@@ -12,7 +12,7 @@ Each module defines its own tables in `<n>.db.ts` via `CREATE TABLE IF NOT EXIST
 - **FKs:** `TEXT` referencing the parent table's primary key.
 - **Booleans:** `INTEGER` (`1`/`0`). Convert at the repository boundary.
 - **Ordering:** default `ORDER BY created_at DESC` unless specified otherwise.
-- **PRAGMA `user_version`:** used for versioned migrations.
+- **PRAGMA `user_version`:** reserved for versioned migrations (deferred to v1.0; pre-1.0 the schema is created with `CREATE TABLE IF NOT EXISTS`).
 - **Search columns:** `*_search` with lowercase + unaccented text; query with `LIKE`.
 - **JSON:** `TEXT` columns with serialized JSON (e.g. images arrays, attributes maps).
 

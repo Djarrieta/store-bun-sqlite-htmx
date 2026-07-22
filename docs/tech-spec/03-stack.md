@@ -11,7 +11,7 @@
 | LLM                 | OpenAI-compatible API (DeepSeek / OpenAI / Ollama swappable via env)   |
 | Email               | Nodemailer or Brevo/SendGrid HTTP API                                   |
 | File storage        | Local filesystem (`data/...`); optional cloud later                     |
-| Migrations          | `PRAGMA user_version` with ordered `.ts` migrations                     |
+| Migrations          | Deferred to v1.0; pre-1.0 uses `CREATE TABLE IF NOT EXISTS` (disposable DB) |
 | Deployment          | Docker on self-hosted server (port 4010)                                |
 | External access     | Cloudflare Tunnel (`crista.click`)                                      |
 | TypeScript          | Strict, zero build step, Bun runs `.ts` directly                       |
