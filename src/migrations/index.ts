@@ -43,6 +43,7 @@ export const MIGRATIONS: Migration[] = [
       // SQLite can't DROP COLUMN a UNIQUE column; recreate the table.
       // Disable FK checks temporarily so DROP TABLE works despite products.category_id FK.
       database.exec("PRAGMA foreign_keys = OFF");
+      database.exec("DROP TABLE IF EXISTS categories_new");
       database.exec(`
         CREATE TABLE categories_new (
           id          TEXT PRIMARY KEY,
